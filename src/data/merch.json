@@ -1,0 +1,8 @@
+{
+  "products": [
+    { "id": "1", "name": "Tote Bag \"Baddie Reader\"", "price": 15, "description": "Un sac en toile robuste et élégant pour transporter toutes vos prochaines obsessions littéraires.", "colors": ["Beige", "Crème"], "sizes": ["Unique"], "imageUrl": "" },
+    { "id": "2", "name": "Mug en céramique BBC", "price": 12, "description": "Le compagnon idéal pour vos moments de lecture cozy au coin du feu.", "colors": ["Blanc", "Rose"], "sizes": ["330ml"], "imageUrl": "" },
+    { "id": "3", "name": "Marque-page brodé", "price": 5, "description": "Un détail délicat pour ne jamais perdre le fil de votre histoire préférée.", "colors": ["Or", "Bronze"], "sizes": ["Standard"], "imageUrl": "" },
+    { "id": "4", "name": "Sweatshirt \"Just one more chapter\"", "price": 45, "description": "Confort ultime pour vos nuits blanches de lecture.", "colors": ["Gris", "Noir", "Rose"], "sizes": ["S", "M", "L", "XL"], "imageUrl": "" }
+  ]
+}
