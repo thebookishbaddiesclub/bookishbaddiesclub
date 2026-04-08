@@ -55,15 +55,15 @@ export default function Navbar() {
 
   return (
     <header className={cn(
-      "fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none transition-all duration-500 ease-in-out",
-      isScrolled ? "pt-4" : "pt-0 pb-4"
+      "fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none transition-all duration-300 ease-in-out",
+      isScrolled ? "py-2 bg-white/70 backdrop-blur-xl border-b border-bb-beige shadow-sm" : "pt-2 pb-4 bg-transparent border-transparent"
     )}>
       {/* Logo XXL - Centré tout en haut */}
       <Link 
         href="/" 
         className={cn(
-          "pointer-events-auto shrink-0 group flex items-center transition-all duration-500 ease-in-out",
-          isScrolled ? "mb-2 scale-90" : "mb-5"
+          "pointer-events-auto shrink-0 group flex items-center transition-all duration-300 ease-in-out",
+          isScrolled ? "mb-2" : "mb-5"
         )}
       >
         <Image 
@@ -72,8 +72,8 @@ export default function Navbar() {
           width={400} 
           height={180} 
           className={cn(
-            "w-auto object-contain transition-all duration-500 ease-in-out",
-            isScrolled ? "h-[60px]" : "h-[180px]"
+            "w-auto object-contain transition-all duration-300 ease-in-out transform origin-top",
+            isScrolled ? "h-[90px] scale-100" : "h-[180px]"
           )} 
           priority
         />
@@ -81,10 +81,10 @@ export default function Navbar() {
       
       {/* Barre de Navigation - Bloc Flottant 'Nuage' */}
       <nav className={cn(
-        "pointer-events-auto bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl rounded-full flex items-center transition-all duration-500 ease-in-out",
+        "pointer-events-auto bg-white/70 backdrop-blur-xl border shadow-xl rounded-full flex items-center transition-all duration-300 ease-in-out",
         isScrolled 
-          ? "px-8 py-3 gap-6 border-white/60 bg-white/80" 
-          : "px-10 py-5 gap-10"
+          ? "px-6 py-2 gap-4 border-white/60 h-16" 
+          : "px-10 py-5 gap-10 border-white/40 h-24"
       )}>
         <ul className="flex items-center gap-8">
           {NAV_LINKS.map((link) => {
