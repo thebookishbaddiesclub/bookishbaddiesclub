@@ -1,11 +1,12 @@
 import FadeIn from "@/components/FadeIn";
 import BookCard from "@/components/BookCard";
-import lecturesData from "@/data/lectures.json";
+import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-export default function LecturesPage() {
-  const books = lecturesData.books || [];
+export default async function LecturesPage() {
+  const { data: booksData } = await supabase.from("books").select("*").order("created_at", { ascending: true });
+  const books = booksData || [];
   
   const perpignanBooks = books.filter((b: any) => b.city === "Perpignan");
   const montpellierBooks = books.filter((b: any) => b.city === "Montpellier");
