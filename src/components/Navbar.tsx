@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -41,23 +42,50 @@ const SOCIAL_LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center pt-0 pb-4 px-4 pointer-events-none transition-all duration-300">
+    <header className={cn(
+      "fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none transition-all duration-500 ease-in-out",
+      isScrolled ? "pt-4" : "pt-0 pb-4"
+    )}>
       {/* Logo XXL - Centré tout en haut */}
-      <Link href="/" className="pointer-events-auto shrink-0 group flex items-center mb-5">
+      <Link 
+        href="/" 
+        className={cn(
+          "pointer-events-auto shrink-0 group flex items-center transition-all duration-500 ease-in-out",
+          isScrolled ? "mb-2 scale-90" : "mb-5"
+        )}
+      >
         <Image 
           src="/logo-club.png" 
           alt="The Bookish Baddies Club Logo" 
           width={400} 
           height={180} 
-          className="h-[180px] w-auto object-contain transition-transform group-hover:scale-105" 
+          className={cn(
+            "w-auto object-contain transition-all duration-500 ease-in-out",
+            isScrolled ? "h-[60px]" : "h-[180px]"
+          )} 
           priority
         />
       </Link>
       
       {/* Barre de Navigation - Bloc Flottant 'Nuage' */}
-      <nav className="pointer-events-auto bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl rounded-full px-10 py-5 flex items-center gap-10 min-w-[320px] max-w-fit transition-all duration-500">
+      <nav className={cn(
+        "pointer-events-auto bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl rounded-full flex items-center transition-all duration-500 ease-in-out",
+        isScrolled 
+          ? "px-8 py-3 gap-6 border-white/60 bg-white/80" 
+          : "px-10 py-5 gap-10"
+      )}>
         <ul className="flex items-center gap-8">
           {NAV_LINKS.map((link) => {
             const isActive = pathname === link.path;
