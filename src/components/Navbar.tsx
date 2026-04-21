@@ -75,8 +75,8 @@ export default function Navbar() {
   return (
     <>
       <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none transition-all duration-300 ease-in-out",
-        isScrolled ? "py-2 bg-white/70 backdrop-blur-xl border-b border-bb-beige shadow-sm" : "pt-2 pb-4 bg-transparent border-transparent",
+        "fixed top-0 left-0 right-0 z-[60] flex flex-col items-center pointer-events-none transition-all duration-300 ease-in-out",
+        isScrolled ? "py-2 bg-red-500/70 backdrop-blur-xl border-b border-bb-beige shadow-sm" : "pt-2 pb-4 bg-transparent border-transparent",
         !isVisible && "-translate-y-full"
       )}>
         {/* Logo XXL - Centré tout en haut */}
@@ -103,7 +103,7 @@ export default function Navbar() {
         
         {/* Barre de Navigation - Bloc Flottant 'Nuage' */}
         <nav className={cn(
-          "pointer-events-auto bg-white/70 backdrop-blur-xl border shadow-xl flex items-center transition-all duration-300 ease-in-out",
+          "pointer-events-auto bg-white/70 backdrop-blur-xl border shadow-xl flex items-center transition-all duration-300 ease-in-out relative z-[100]",
           // Mobile specific adjustments
           "w-[90%] md:w-auto rounded-full justify-between md:justify-center px-4 md:px-10",
           isScrolled 
@@ -154,11 +154,11 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button - Align Left relative to empty space implicitly or right */}
-          <div className="flex md:hidden w-full justify-between items-center px-2">
+          <div className="flex md:hidden w-full justify-between items-center px-2 pointer-events-auto">
             <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-bb-ink/50">Menu</span>
             <button 
               onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 text-bb-ink hover:text-bb-rose transition-colors"
+              className="p-2 text-bb-ink hover:text-bb-rose transition-colors pointer-events-auto cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
