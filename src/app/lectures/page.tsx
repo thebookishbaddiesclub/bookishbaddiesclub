@@ -45,7 +45,7 @@ export default async function LecturesPage() {
                 <div className="h-[1px] w-full bg-gradient-to-r from-bb-beige to-transparent"></div>
               </FadeIn>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-16">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {perpignanBooks.map((book: any, index: number) => (
                   <BookCard 
                     key={book.id} 
@@ -68,7 +68,7 @@ export default async function LecturesPage() {
                 <div className="h-[1px] w-full bg-gradient-to-r from-bb-beige to-transparent"></div>
               </FadeIn>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-16">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {montpellierBooks.map((book: any, index: number) => (
                   <BookCard 
                     key={book.id} 

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "The Bookish Baddies Club",
   description: "A modern, cozy book club application.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.png",
   },
 };
 

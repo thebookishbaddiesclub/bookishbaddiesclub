@@ -5,7 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ShoppingBag, Calendar, BookOpen, Home, Instagram } from "lucide-react";
+import { ShoppingBag, Calendar, BookOpen, Home, Instagram, Menu, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const NAV_LINKS = [
   { name: "Accueil", path: "/", icon: Home },
@@ -43,90 +44,202 @@ const SOCIAL_LINKS = [
 export default function Navbar() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      const currentScrollY = window.scrollY;
+      setIsScrolled(currentScrollY > 50);
+
+      // Smart scroll detection
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false); // Scrolling down - hide
+      } else {
+        setIsVisible(true); // Scrolling up - show
+      }
+
+      setLastScrollY(currentScrollY);
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [lastScrollY]);
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   return (
-    <header className={cn(
-      "fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none transition-all duration-300 ease-in-out",
-      isScrolled ? "py-2 bg-white/70 backdrop-blur-xl border-b border-bb-beige shadow-sm" : "pt-2 pb-4 bg-transparent border-transparent"
-    )}>
-      {/* Logo XXL - Centré tout en haut */}
-      <Link 
-        href="/" 
-        className={cn(
-          "pointer-events-auto shrink-0 group flex items-center transition-all duration-300 ease-in-out",
-          isScrolled ? "mb-2" : "mb-5"
-        )}
-      >
-        <Image 
-          src="/logo-club.png" 
-          alt="The Bookish Baddies Club Logo" 
-          width={400} 
-          height={180} 
-          className={cn(
-            "w-auto object-contain transition-all duration-300 ease-in-out transform origin-top",
-            isScrolled ? "h-[90px] scale-100" : "h-[180px]"
-          )} 
-          priority
-        />
-      </Link>
-      
-      {/* Barre de Navigation - Bloc Flottant 'Nuage' */}
-      <nav className={cn(
-        "pointer-events-auto bg-white/70 backdrop-blur-xl border shadow-xl rounded-full flex items-center transition-all duration-300 ease-in-out",
-        isScrolled 
-          ? "px-6 py-2 gap-4 border-white/60 h-16" 
-          : "px-10 py-5 gap-10 border-white/40 h-24"
+    <>
+      <header className={cn(
+        "fixed top-0 left-0 right-0 z-50 flex flex-col items-center pointer-events-none transition-all duration-300 ease-in-out",
+        isScrolled ? "py-2 bg-white/70 backdrop-blur-xl border-b border-bb-beige shadow-sm" : "pt-2 pb-4 bg-transparent border-transparent",
+        !isVisible && "-translate-y-full"
       )}>
-        <ul className="flex items-center gap-8">
-          {NAV_LINKS.map((link) => {
-            const isActive = pathname === link.path;
-            const Icon = link.icon;
-            return (
-              <li key={link.path}>
-                <Link
-                  href={link.path}
-                  className={cn(
-                    "flex items-center gap-2 text-[10px] md:text-xs font-normal uppercase tracking-[.25em] transition-all duration-200 group relative py-1",
-                    isActive ? "text-bb-ink" : "text-bb-ink/50 hover:text-bb-ink"
-                  )}
-                >
-                  <Icon className={cn("w-3.5 h-3.5 transition-transform group-hover:scale-110", isActive && "text-bb-accent")} />
-                  <span>{link.name}</span>
-                  {isActive && (
-                    <span className="absolute -bottom-1 left-0 right-0 h-[1px] bg-bb-accent rounded-full" />
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        {/* Logo XXL - Centré tout en haut */}
+        <Link 
+          href="/" 
+          className={cn(
+            "pointer-events-auto shrink-0 group flex items-center transition-all duration-300 ease-in-out",
+            isScrolled ? "mb-2" : "mb-5"
+          )}
+        >
+          <Image 
+            src="/logo-club.png" 
+            alt="The Bookish Baddies Club Logo" 
+            width={400} 
+            height={180} 
+            className={cn(
+              "w-auto object-contain transition-all duration-300 ease-in-out transform origin-top",
+              // Mobile specific sizing, Desktop sizing
+              isScrolled ? "h-[50px] md:h-[90px] scale-100" : "h-[80px] md:h-[180px]"
+            )} 
+            priority
+          />
+        </Link>
+        
+        {/* Barre de Navigation - Bloc Flottant 'Nuage' */}
+        <nav className={cn(
+          "pointer-events-auto bg-white/70 backdrop-blur-xl border shadow-xl flex items-center transition-all duration-300 ease-in-out",
+          // Mobile specific adjustments
+          "w-[90%] md:w-auto rounded-full justify-between md:justify-center px-4 md:px-10",
+          isScrolled 
+            ? "py-2 gap-4 border-white/60 h-14 md:h-16" 
+            : "py-3 md:py-5 gap-10 border-white/40 h-16 md:h-24"
+        )}>
+          {/* Desktop Nav Links */}
+          <ul className="hidden md:flex items-center gap-8">
+            {NAV_LINKS.map((link) => {
+              const isActive = pathname === link.path;
+              const Icon = link.icon;
+              return (
+                <li key={link.path}>
+                  <Link
+                    href={link.path}
+                    className={cn(
+                      "flex items-center gap-2 text-[10px] md:text-xs font-normal uppercase tracking-[.25em] transition-all duration-200 group relative py-1",
+                      isActive ? "text-bb-ink" : "text-bb-ink/50 hover:text-bb-ink"
+                    )}
+                  >
+                    <Icon className={cn("w-3.5 h-3.5 transition-transform group-hover:scale-110", isActive && "text-bb-accent")} />
+                    <span>{link.name}</span>
+                    {isActive && (
+                      <span className="absolute -bottom-1 left-0 right-0 h-[1px] bg-bb-accent rounded-full" />
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
 
-        <div className="h-4 w-[1px] bg-bb-beige hidden sm:block"></div>
+          <div className="h-4 w-[1px] bg-bb-beige hidden md:block"></div>
 
-        <div className="flex items-center gap-6">
-          {SOCIAL_LINKS.map((social) => (
-            <a 
-              key={social.name}
-              href={social.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-bb-ink/30 hover:text-bb-accent transition-all duration-200 hover:scale-110"
-              title={social.name}
+          {/* Desktop Social Links */}
+          <div className="hidden md:flex items-center gap-6">
+            {SOCIAL_LINKS.map((social) => (
+              <a 
+                key={social.name}
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-bb-ink/30 hover:text-bb-accent transition-all duration-200 hover:scale-110"
+                title={social.name}
+              >
+                <social.icon className="w-4 h-4" />
+              </a>
+            ))}
+          </div>
+
+          {/* Mobile Menu Button - Align Left relative to empty space implicitly or right */}
+          <div className="flex md:hidden w-full justify-between items-center px-2">
+            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-bb-ink/50">Menu</span>
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 text-bb-ink hover:text-bb-rose transition-colors"
             >
-              <social.icon className="w-4 h-4" />
-            </a>
-          ))}
-        </div>
-      </nav>
-    </header>
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 z-[100] bg-bb-ink/40 backdrop-blur-sm md:hidden"
+            />
+            
+            {/* Drawer */}
+            <motion.div 
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 bottom-0 w-64 bg-bb-cream z-[110] shadow-2xl flex flex-col md:hidden border-l border-bb-beige"
+            >
+              <div className="flex justify-end p-6">
+                <button 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 text-bb-ink hover:text-bb-rose rounded-full bg-white/50 border border-bb-beige"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-8 py-4 flex flex-col gap-8">
+                <ul className="flex flex-col gap-6">
+                  {NAV_LINKS.map((link) => {
+                    const isActive = pathname === link.path;
+                    const Icon = link.icon;
+                    return (
+                      <li key={link.path}>
+                        <Link
+                          href={link.path}
+                          className={cn(
+                            "flex items-center gap-4 text-xs font-bold uppercase tracking-[.2em] transition-all duration-200",
+                            isActive ? "text-bb-rose" : "text-bb-ink hover:text-bb-rose"
+                          )}
+                        >
+                          <Icon className={cn("w-5 h-5", isActive && "text-bb-rose")} />
+                          <span>{link.name}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                <div className="h-[1px] w-full bg-bb-beige my-4"></div>
+
+                <div className="flex justify-center gap-6">
+                  {SOCIAL_LINKS.map((social) => (
+                    <a 
+                      key={social.name}
+                      href={social.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-bb-ink/40 hover:text-bb-rose transition-all duration-200 p-2 bg-white rounded-full border border-bb-beige"
+                      title={social.name}
+                    >
+                      <social.icon className="w-4 h-4" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
+
