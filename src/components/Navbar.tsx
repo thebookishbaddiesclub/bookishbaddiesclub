@@ -60,24 +60,35 @@ export default function Navbar() {
         setIsVisible(true); // Scrolling up - show
       }
 
-      setLastScrollY(currentScrollY);
+    useEffect(() => {
+    let lastScroll = 0;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // 1. Gérer l'apparence (isScrolled)
+      setIsScrolled(currentScrollY > 20);
+
+      // 2. Gérer la visibilité (isVisible)
+      if (currentScrollY > lastScroll && currentScrollY > 150) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+
+      lastScroll = currentScrollY;
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
-
-  // Close mobile menu when route changes
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [pathname]);
+  }, []); // C'est ici que le useEffect s'arrête proprement.
 
   return (
     <>
-     <header className={cn(
+      <header className={cn(
         "fixed top-0 left-0 right-0 z-[60] flex flex-col items-center transition-all duration-500 ease-in-out will-change-transform",
         isScrolled ? "py-2 bg-white/80 backdrop-blur-xl border-b border-bb-beige shadow-sm" : "pt-4 pb-4 bg-transparent border-transparent",
-        !isVisible ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
+      !isVisible ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
       )}>
         {/* Logo XXL - Centré tout en haut */}
         <Link 
