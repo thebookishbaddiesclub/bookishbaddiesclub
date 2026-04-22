@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "The Bookish Baddies Club",
   description: "A modern, cozy book club application.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.png",
   },
 };
 
@@ -22,15 +22,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${montserrat.variable} ${abril.variable} ${playfair.variable}`}>
-      <body className="flex flex-col min-h-screen bg-bb-cream text-bb-ink font-sans">
-        {/* Masque de dégradé et flou au scroll (Smooth Fade Effect) */}
-        <div className="fixed top-0 left-0 right-0 h-80 bg-gradient-to-b from-bb-cream via-bb-cream/90 to-transparent pointer-events-none z-40 backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_70%,transparent)]" />
-        
+    <html lang="fr" className={`${montserrat.variable} ${abril.variable} ${playfair.variable} scroll-smooth`}>
+      <body className="flex flex-col min-h-screen bg-bb-cream text-bb-ink font-sans overflow-x-hidden">
+        {/* On a supprimé le masque fixe h-80 qui bloquait les clics et le scroll */}
         <Navbar />
-        <main className="flex-grow pt-[305px] pb-12 px-6 max-w-7xl mx-auto w-full">
+        
+        <main className="flex-grow pt-[200px] pb-12 px-6 max-w-7xl mx-auto w-full relative z-10">
           {children}
         </main>
+        
         <Footer />
       </body>
     </html>

@@ -5,8 +5,14 @@ import { supabase } from "@/lib/supabase";
 export const dynamic = "force-dynamic";
 
 export default async function LecturesPage() {
-  const { data: booksData } = await supabase.from("books").select("*").order("created_at", { ascending: true });
-  const books = booksData || [];
+  let books: any[] = [];
+  
+  try {
+    const { data } = await supabase.from("books").select("*").order("created_at", { ascending: true });
+    books = data || [];
+  } catch (e) {
+    console.warn("Supabase not available during build", e);
+  }
   
   const perpignanBooks = books.filter((b: any) => b.city === "Perpignan");
   const montpellierBooks = books.filter((b: any) => b.city === "Montpellier");
@@ -45,7 +51,7 @@ export default async function LecturesPage() {
                 <div className="h-[1px] w-full bg-gradient-to-r from-bb-beige to-transparent"></div>
               </FadeIn>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-16">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {perpignanBooks.map((book: any, index: number) => (
                   <BookCard 
                     key={book.id} 
@@ -68,7 +74,7 @@ export default async function LecturesPage() {
                 <div className="h-[1px] w-full bg-gradient-to-r from-bb-beige to-transparent"></div>
               </FadeIn>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-16">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {montpellierBooks.map((book: any, index: number) => (
                   <BookCard 
                     key={book.id} 
