@@ -5,8 +5,14 @@ import { supabase } from "@/lib/supabase";
 export const dynamic = "force-dynamic";
 
 export default async function LecturesPage() {
-  const { data: booksData } = await supabase.from("books").select("*").order("created_at", { ascending: true });
-  const books = booksData || [];
+  let books: any[] = [];
+  
+  try {
+    const { data } = await supabase.from("books").select("*").order("created_at", { ascending: true });
+    books = data || [];
+  } catch (e) {
+    console.warn("Supabase not available during build", e);
+  }
   
   const perpignanBooks = books.filter((b: any) => b.city === "Perpignan");
   const montpellierBooks = books.filter((b: any) => b.city === "Montpellier");
