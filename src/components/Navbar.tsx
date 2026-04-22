@@ -74,10 +74,10 @@ export default function Navbar() {
 
   return (
     <>
-      <header className={cn(
-        "fixed top-0 left-0 right-0 z-[60] flex flex-col items-center transition-all duration-300 ease-in-out",
-        isScrolled ? "py-2 bg-white/80 backdrop-blur-xl border-b border-bb-beige shadow-sm" : "pt-2 pb-4 bg-transparent border-transparent",
-        !isVisible && "-translate-y-full"
+     <header className={cn(
+        "fixed top-0 left-0 right-0 z-[60] flex flex-col items-center transition-all duration-500 ease-in-out will-change-transform",
+        isScrolled ? "py-2 bg-white/80 backdrop-blur-xl border-b border-bb-beige shadow-sm" : "pt-4 pb-4 bg-transparent border-transparent",
+        !isVisible ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
       )}>
         {/* Logo XXL - Centré tout en haut */}
         <Link 
