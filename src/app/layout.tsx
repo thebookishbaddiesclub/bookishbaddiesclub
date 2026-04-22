@@ -24,13 +24,15 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${montserrat.variable} ${abril.variable} ${playfair.variable}`}>
       <body className="flex flex-col min-h-screen bg-bb-cream text-bb-ink font-sans">
-        {/* Masque de dégradé et flou au scroll (Smooth Fade Effect) */}
-        <div className="fixed top-0 left-0 right-0 h-80 bg-gradient-to-b from-bb-cream via-bb-cream/90 to-transparent pointer-events-none z-40 backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_70%,transparent)]" />
+        {/* On a enlevé le gros bloc h-80 qui bloquait tout */}
         
         <Navbar />
-        <main className="flex-grow pt-[305px] pb-12 px-6 max-w-7xl mx-auto w-full">
+        
+        {/* On réduit le padding-top à 180px (la taille de ton logo) pour que le scroll commence plus tôt */}
+        <main className="flex-grow pt-[180px] pb-12 px-6 max-w-7xl mx-auto w-full relative z-10">
           {children}
         </main>
+        
         <Footer />
       </body>
     </html>
