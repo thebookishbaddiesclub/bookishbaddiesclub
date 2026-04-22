@@ -38,7 +38,7 @@ export default function AdminPage() {
   const [currentProdImage, setCurrentProdImage] = useState("");
 
   const fetchData = async () => {
-    const res = await fetch("/api/admin");
+    const res = await fetch("/api/admin", { credentials: "include" });
     const data = await res.json();
     if (data.lectures) setBooks(data.lectures.books || []);
     if (data.merch) setProducts(data.merch.products || []);
@@ -82,6 +82,7 @@ export default function AdminPage() {
     const method = editingId ? "PUT" : "POST";
     const res = await fetch("/api/admin", {
       method: method,
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: "lectures",
@@ -117,6 +118,7 @@ export default function AdminPage() {
     const method = editingId ? "PUT" : "POST";
     const res = await fetch("/api/admin", {
       method: method,
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: "merch",
@@ -147,7 +149,8 @@ export default function AdminPage() {
     if (!confirm(`Êtes-vous sûre de vouloir supprimer "${name}" ?`)) return;
 
     const res = await fetch(`/api/admin?type=${type}&id=${id}`, {
-      method: "DELETE"
+      method: "DELETE",
+      credentials: "include"
     });
 
     if (res.ok) {
