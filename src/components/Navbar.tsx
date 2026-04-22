@@ -75,8 +75,8 @@ export default function Navbar() {
   return (
     <>
       <header className={cn(
-        "fixed top-0 left-0 right-0 z-[60] flex flex-col items-center pointer-events-none transition-all duration-300 ease-in-out",
-        isScrolled ? "py-2 bg-red-500/70 backdrop-blur-xl border-b border-bb-beige shadow-sm" : "pt-2 pb-4 bg-transparent border-transparent",
+        "fixed top-0 left-0 right-0 z-[60] flex flex-col items-center transition-all duration-300 ease-in-out",
+        isScrolled ? "py-2 bg-white/80 backdrop-blur-xl border-b border-bb-beige shadow-sm" : "pt-2 pb-4 bg-transparent border-transparent",
         !isVisible && "-translate-y-full"
       )}>
         {/* Logo XXL - Centré tout en haut */}
