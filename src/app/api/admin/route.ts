@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { cookies } from "next/headers";
+
+async function verifyAuth() {
+  const cookieStore = await cookies();
+  return cookieStore.get("admin_session")?.value === "true";
+}
 
 // GET: Récupérer les données actuelles
 export async function GET() {
@@ -19,11 +25,11 @@ export async function GET() {
 
 // POST: Ajouter un nouvel élément
 export async function POST(request: Request) {
-  const { password, type, data } = await request.json();
-
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json({ error: "Mot de passe erroné" }, { status: 401 });
+  if (!(await verifyAuth())) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+
+  const { type, data } = await request.json();
 
   try {
     const table = type === "lectures" ? "books" : "products";
@@ -39,11 +45,11 @@ export async function POST(request: Request) {
 
 // PUT: Modifier un élément existant
 export async function PUT(request: Request) {
-  const { password, type, id, data } = await request.json();
-
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json({ error: "Mot de passe erroné" }, { status: 401 });
+  if (!(await verifyAuth())) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+
+  const { type, id, data } = await request.json();
 
   try {
     const table = type === "lectures" ? "books" : "products";
@@ -59,14 +65,13 @@ export async function PUT(request: Request) {
 
 // DELETE: Supprimer un élément
 export async function DELETE(request: Request) {
+  if (!(await verifyAuth())) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
-  const password = searchParams.get("password");
   const type = searchParams.get("type");
   const id = searchParams.get("id");
-
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json({ error: "Mot de passe erroné" }, { status: 401 });
-  }
 
   if (!type || !id) {
     return NextResponse.json({ error: "Paramètres manquants" }, { status: 400 });

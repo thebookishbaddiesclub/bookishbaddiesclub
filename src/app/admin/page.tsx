@@ -72,7 +72,7 @@ export default function AdminPage() {
 
     let imageUrl = currentBookCover;
     if (bookImage) {
-      const newBlob = await upload(bookImage.name, bookImage, {
+      const newBlob = await upload(`${Date.now()}-${bookImage.name}`, bookImage, {
         access: "public",
         handleUploadUrl: "/api/upload",
       });
@@ -107,7 +107,7 @@ export default function AdminPage() {
 
     let imageUrl = currentProdImage;
     if (prodImage) {
-      const newBlob = await upload(prodImage.name, prodImage, {
+      const newBlob = await upload(`${Date.now()}-${prodImage.name}`, prodImage, {
         access: "public",
         handleUploadUrl: "/api/upload",
       });
