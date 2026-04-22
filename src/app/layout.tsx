@@ -22,14 +22,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${montserrat.variable} ${abril.variable} ${playfair.variable}`}>
-      <body className="flex flex-col min-h-screen bg-bb-cream text-bb-ink font-sans">
-        {/* On a enlevé le gros bloc h-80 qui bloquait tout */}
-        
+    <html lang="fr" className={`${montserrat.variable} ${abril.variable} ${playfair.variable} scroll-smooth`}>
+      <body className="flex flex-col min-h-screen bg-bb-cream text-bb-ink font-sans overflow-x-hidden">
+        {/* On a supprimé le masque fixe h-80 qui bloquait les clics et le scroll */}
         <Navbar />
         
-        {/* On réduit le padding-top à 180px (la taille de ton logo) pour que le scroll commence plus tôt */}
-        <main className="flex-grow pt-[180px] pb-12 px-6 max-w-7xl mx-auto w-full relative z-10">
+        <main className="flex-grow pt-[200px] pb-12 px-6 max-w-7xl mx-auto w-full relative z-10">
           {children}
         </main>
         
