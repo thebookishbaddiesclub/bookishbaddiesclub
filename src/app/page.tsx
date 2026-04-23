@@ -1,6 +1,4 @@
-"use client";
-
-import { useState, useEffect } from "react";
+"import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BookOpen, Sparkles } from "lucide-react";
@@ -23,14 +21,45 @@ function FlipCard({
   actionText 
 }: FlipCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Détecte si l'appareil est mobile (touch)
+  useEffect(() => {
+    const check = () => setIsMobile(window.matchMedia("(hover: none)").matches);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // Sur mobile : flip automatique au scroll (IntersectionObserver)
+  useEffect(() => {
+    if (!isMobile || !cardRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          // Petit délai pour que l'animation d'entrée se finisse d'abord
+          setTimeout(() => setIsFlipped(true), 300);
+        } else {
+          setIsFlipped(false);
+        }
+      },
+      { threshold: 0.6 }
+    );
+
+    observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, [isMobile]);
 
   return (
     <div 
+      ref={cardRef}
       className="relative w-full aspect-[4/5] max-w-[340px] mx-auto cursor-pointer"
       style={{ perspective: "1200px" }}
-      onMouseEnter={() => setIsFlipped(true)}
-      onMouseLeave={() => setIsFlipped(false)}
-      onClick={() => setIsFlipped(!isFlipped)}
+      onMouseEnter={() => !isMobile && setIsFlipped(true)}
+      onMouseLeave={() => !isMobile && setIsFlipped(false)}
+      onClick={() => isMobile && setIsFlipped(!isFlipped)}
     >
       <motion.div
         className="w-full h-full relative"
@@ -48,6 +77,11 @@ function FlipCard({
             <Icon className="w-7 h-7 text-bb-ink/70" strokeWidth={1} />
           </div>
           <h2 className="text-2xl font-serif text-bb-ink tracking-tight">{title}</h2>
+          {isMobile && (
+            <p className="text-[9px] uppercase tracking-widest text-bb-ink/30 font-bold mt-4">
+              Appuyer pour découvrir
+            </p>
+          )}
         </div>
 
         {/* Back Face */}
@@ -77,6 +111,7 @@ function FlipCard({
       </motion.div>
     </div>
   );
+}
 }
 
 export default function Home() {

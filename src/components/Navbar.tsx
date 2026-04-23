@@ -60,7 +60,7 @@ export default function Navbar() {
                 alt="Bookish Baddies Club"
                 width={500}
                 height={220}
-                className="w-auto h-[70px] md:h-[110px]"
+                className="w-auto h-[90px] md:h-[110px]"
                 priority
               />
             </Link>
@@ -182,7 +182,7 @@ export default function Navbar() {
             className="fixed inset-0 z-[100] bg-bb-cream flex flex-col pointer-events-auto"
           >
             <div className="flex justify-between items-center px-6 py-5 border-b border-bb-beige/20">
-              <Image src="/logo-club.png" alt="Logo" width={140} height={60} className="h-8 w-auto" />
+              <Image src="/logo-club.png" alt="Logo" width={200} height={88} className="h-12 w-auto" />
               <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-bb-ink hover:text-bb-rose transition-colors">
                 <X className="w-7 h-7" />
               </button>
@@ -208,20 +208,39 @@ export default function Navbar() {
                 );
               })}
 
-              <div className="mt-10 flex gap-5">
+              <div className="mt-10 flex gap-4">
                 <a
-                  href="https://instagram.com"
+                  href="https://www.instagram.com/bookishbaddiesclub/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-3.5 rounded-full bg-bb-beige/30 text-bb-ink hover:text-bb-rose transition-colors"
+                  title="Instagram"
                 >
                   <Instagram className="w-5 h-5" />
+                </a>
+                <a
+                  href="https://www.tiktok.com/@bookishbaddiesclub"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3.5 rounded-full bg-bb-beige/30 text-bb-ink hover:text-bb-rose transition-colors"
+                  title="TikTok"
+                >
+                  <TikTokIcon />
+                </a>
+                <a
+                  href="https://discord.gg/yrzPjg4FuW"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3.5 rounded-full bg-bb-beige/30 text-bb-ink hover:text-bb-rose transition-colors"
+                  title="Discord"
+                >
+                  <DiscordIcon />
                 </a>
               </div>
             </nav>
 
             <div className="pb-10 flex justify-center opacity-20">
-              <Image src="/logo-club.png" alt="Logo" width={100} height={44} className="h-8 w-auto" />
+              <Image src="/logo-club.png" alt="Logo" width={150} height={66} className="h-10 w-auto" />
             </div>
           </motion.div>
         )}
