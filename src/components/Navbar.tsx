@@ -60,7 +60,7 @@ export default function Navbar() {
                 alt="Bookish Baddies Club"
                 width={500}
                 height={220}
-                className="w-auto h-[90px] md:h-[110px]"
+                className="w-auto h-[110px] md:h-[150px]"
                 priority
               />
             </Link>
@@ -96,7 +96,7 @@ export default function Navbar() {
                   alt="BB"
                   width={200}
                   height={100}
-                  className="h-9 w-auto"
+                  className="h-11 w-auto"
                 />
               </Link>
             </motion.div>
