@@ -14,6 +14,7 @@ interface Product {
   colors: string[];
   sizes: string[];
   imageUrl: string;
+  stock?: number;
 }
 
 export const dynamic = "force-dynamic";
@@ -146,22 +147,34 @@ export default function MerchPage() {
                   </div>
                   
                   <div className="mb-6">
-                    <h3 className="font-serif text-xl tracking-tight text-bb-ink">{product.name}</h3>
-                    <p className="text-bb-rose font-bold mt-1 uppercase tracking-widest text-xs">{product.price} €</p>
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-serif text-xl tracking-tight text-bb-ink">{product.name}</h3>
+                      <p className="text-bb-rose font-bold uppercase tracking-widest text-xs">{product.price} €</p>
+                    </div>
+                    <div className="mt-2">
+                       {product.stock !== undefined && product.stock <= 0 ? (
+                         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-500 bg-red-50 px-3 py-1 rounded-full border border-red-100">En rupture de stock</span>
+                       ) : product.stock !== undefined && product.stock <= 5 ? (
+                         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-orange-500 bg-orange-50 px-3 py-1 rounded-full border border-orange-100">Plus que {product.stock} exemplaires !</span>
+                       ) : (
+                         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-100">En stock</span>
+                       )}
+                    </div>
                   </div>
 
                   <div className="flex gap-2">
                     <button
                       onClick={() => addToCart(product)}
-                      className="flex-1 py-3 px-4 bg-bb-ink text-bb-cream rounded-full font-bold text-xs uppercase tracking-widest transition-all hover:bg-bb-rose hover:shadow-lg flex items-center justify-center gap-2"
+                      disabled={product.stock !== undefined && product.stock <= 0}
+                      className="flex-1 py-3 px-4 bg-bb-ink text-bb-cream rounded-full font-bold text-xs uppercase tracking-widest transition-all hover:bg-bb-rose hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-30 disabled:hover:bg-bb-ink"
                     >
-                      <Plus className="w-4 h-4" /> Ajouter
+                      <Plus className="w-4 h-4" /> {product.stock !== undefined && product.stock <= 0 ? "Indisponible" : "Ajouter"}
                     </button>
                     <button
                       onClick={() => setSelectedProduct(product)}
                       className="py-3 px-4 bg-white border border-bb-beige text-bb-ink rounded-full font-bold text-xs uppercase tracking-widest transition-all hover:border-bb-rose/40"
                     >
-                      En savoir plus
+                      Détails
                     </button>
                   </div>
                 </div>

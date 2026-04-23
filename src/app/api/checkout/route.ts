@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       payment_method_types: ["card"],
       line_items,
       mode: "payment",
-      success_url: `https://thebookishbaddiesclub.fr/success`,
+      success_url: `${request.headers.get("origin")}/success`,
       cancel_url: `${request.headers.get("origin")}/merch?canceled=true`,
     });
 

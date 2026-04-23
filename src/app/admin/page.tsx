@@ -30,10 +30,10 @@ export default function AdminPage() {
   // Form states for Merch
   const [prodName, setProdName] = useState("");
   const [prodPrice, setProdPrice] = useState("");
+  const [prodStock, setProdStock] = useState("");
   const [prodDesc, setProdDesc] = useState("");
   const [prodColors, setProdColors] = useState("");
   const [prodSizes, setProdSizes] = useState("");
-  const [prodPriceId, setProdPriceId] = useState("");
   const [prodImage, setProdImage] = useState<File | null>(null);
   const [currentProdImage, setCurrentProdImage] = useState("");
 
@@ -62,7 +62,7 @@ export default function AdminPage() {
 
   const resetProdForm = () => {
     setEditingId(null);
-    setProdName(""); setProdPrice(""); setProdDesc(""); setProdColors(""); setProdSizes(""); setProdPriceId(""); setProdImage(null); setCurrentProdImage("");
+    setProdName(""); setProdPrice(""); setProdDesc(""); setProdColors(""); setProdSizes(""); setProdStock(""); setProdImage(null); setCurrentProdImage("");
   };
 
   const handleAddOrEditBook = async (e: React.FormEvent) => {
@@ -126,7 +126,7 @@ export default function AdminPage() {
         data: { 
           name: prodName, 
           price: parseFloat(prodPrice), 
-          priceId: prodPriceId,
+          stock: parseInt(prodStock) || 0,
           description: prodDesc, 
           colors: prodColors.split(",").map(c => c.trim()).filter(c => c !== ""), 
           sizes: prodSizes.split(",").map(s => s.trim()).filter(s => s !== ""),
@@ -175,10 +175,10 @@ export default function AdminPage() {
     setEditingId(prod.id);
     setProdName(prod.name);
     setProdPrice(prod.price.toString());
+    setProdStock(prod.stock?.toString() || "0");
     setProdDesc(prod.description);
     setProdColors((prod.colors || []).join(", "));
     setProdSizes((prod.sizes || []).join(", "));
-    setProdPriceId(prod.priceId || "");
     setCurrentProdImage(prod.imageUrl || "");
     window.scrollTo({ top: 300, behavior: "smooth" });
   };
@@ -292,13 +292,15 @@ export default function AdminPage() {
 
           <form onSubmit={handleAddOrEditProduct} className="space-y-4">
             <input placeholder="Nom du produit" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodName} onChange={e => setProdName(e.target.value)} required />
-            <input type="number" placeholder="Prix (€)" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodPrice} onChange={e => setProdPrice(e.target.value)} required />
+            <div className="grid grid-cols-2 gap-4">
+              <input type="number" placeholder="Prix (€)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodPrice} onChange={e => setProdPrice(e.target.value)} required />
+              <input type="number" placeholder="Stock (quantité)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodStock} onChange={e => setProdStock(e.target.value)} required />
+            </div>
             <textarea placeholder="Description" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm min-h-[120px] font-medium text-sm resize-none" value={prodDesc} onChange={e => setProdDesc(e.target.value)} required />
             <div className="grid grid-cols-2 gap-4">
               <input placeholder="Couleurs (ex: Rose, Blanc)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodColors} onChange={e => setProdColors(e.target.value)} />
               <input placeholder="Tailles (ex: S, M, L)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodSizes} onChange={e => setProdSizes(e.target.value)} />
             </div>
-            <input placeholder="Stripe Price ID (ex: price_123...)" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodPriceId} onChange={e => setProdPriceId(e.target.value)} />
             <div className="relative">
               <input type="file" className="hidden" id="prodImg" onChange={e => setProdImage(e.target.files?.[0] || null)} />
               <label htmlFor="prodImg" className="w-full bg-white px-6 py-16 rounded-[2.5rem] border-2 border-dashed border-bb-beige flex flex-col items-center justify-center cursor-pointer hover:bg-bb-beige/10 transition-all group">
