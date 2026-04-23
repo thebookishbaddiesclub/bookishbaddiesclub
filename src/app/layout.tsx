@@ -11,9 +11,6 @@ const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfa
 export const metadata: Metadata = {
   title: "The Bookish Baddies Club",
   description: "A modern, cozy book club application.",
-  icons: {
-    icon: "/favicon.png",
-  },
 };
 
 export default function RootLayout({
@@ -23,9 +20,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className={`${montserrat.variable} ${abril.variable} ${playfair.variable} scroll-smooth`}>
-      <head>
-        <link rel="icon" href="/favicon.png" />
-      </head>
       <body className="bg-bb-cream text-bb-ink font-sans antialiased">
         <Navbar />
         
