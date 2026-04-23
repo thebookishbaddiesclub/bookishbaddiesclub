@@ -11,7 +11,8 @@ import { useRouter } from "next/navigation";
 
 export default function AdminPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loadingBook, setLoadingBook] = useState(false);
+  const [loadingProd, setLoadingProd] = useState(false);
   const [message, setMessage] = useState("");
   
   // Data lists
@@ -67,82 +68,94 @@ export default function AdminPage() {
 
   const handleAddOrEditBook = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoadingBook(true);
     setMessage("");
 
-    let imageUrl = currentBookCover;
-    if (bookImage) {
-      const newBlob = await upload(`${Date.now()}-${bookImage.name}`, bookImage, {
-        access: "public",
-        handleUploadUrl: "/api/upload",
+    try {
+      let imageUrl = currentBookCover;
+      if (bookImage) {
+        const newBlob = await upload(`${Date.now()}-${bookImage.name}`, bookImage, {
+          access: "public",
+          handleUploadUrl: "/api/upload",
+        });
+        imageUrl = newBlob.url;
+      }
+
+      const method = editingId ? "PUT" : "POST";
+      const res = await fetch("/api/admin", {
+        method: method,
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "lectures",
+          id: editingId,
+          data: { title: bookTitle, author: bookAuthor, month: bookMonth, city: bookCity, coverUrl: imageUrl }
+        })
       });
-      imageUrl = newBlob.url;
-    }
 
-    const method = editingId ? "PUT" : "POST";
-    const res = await fetch("/api/admin", {
-      method: method,
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "lectures",
-        id: editingId,
-        data: { title: bookTitle, author: bookAuthor, month: bookMonth, city: bookCity, coverUrl: imageUrl }
-      })
-    });
-
-    if (res.ok) {
-      setMessage(editingId ? "Lecture modifiée !" : "Lecture ajoutée !");
-      resetBookForm();
-      fetchData();
-    } else {
-      setMessage("Erreur.");
+      if (res.ok) {
+        setMessage(editingId ? "Lecture modifiée !" : "Lecture ajoutée !");
+        resetBookForm();
+        fetchData();
+      } else {
+        setMessage("Erreur lors de la sauvegarde.");
+      }
+    } catch (err) {
+      console.error("Erreur upload livre:", err);
+      setMessage("Erreur lors de l'upload de l'image.");
+    } finally {
+      setLoadingBook(false);
     }
-    setLoading(false);
   };
 
   const handleAddOrEditProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoadingProd(true);
     setMessage("");
 
-    let imageUrl = currentProdImage;
-    if (prodImage) {
-      const newBlob = await upload(`${Date.now()}-${prodImage.name}`, prodImage, {
-        access: "public",
-        handleUploadUrl: "/api/upload",
+    try {
+      let imageUrl = currentProdImage;
+      if (prodImage) {
+        const newBlob = await upload(`${Date.now()}-${prodImage.name}`, prodImage, {
+          access: "public",
+          handleUploadUrl: "/api/upload",
+        });
+        imageUrl = newBlob.url;
+      }
+
+      const method = editingId ? "PUT" : "POST";
+      const res = await fetch("/api/admin", {
+        method: method,
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "merch",
+          id: editingId,
+          data: { 
+            name: prodName, 
+            price: parseFloat(prodPrice), 
+            stock: parseInt(prodStock) || 0,
+            description: prodDesc, 
+            colors: prodColors.split(",").map(c => c.trim()).filter(c => c !== ""), 
+            sizes: prodSizes.split(",").map(s => s.trim()).filter(s => s !== ""),
+            imageUrl: imageUrl 
+          }
+        })
       });
-      imageUrl = newBlob.url;
-    }
 
-    const method = editingId ? "PUT" : "POST";
-    const res = await fetch("/api/admin", {
-      method: method,
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "merch",
-        id: editingId,
-        data: { 
-          name: prodName, 
-          price: parseFloat(prodPrice), 
-          stock: parseInt(prodStock) || 0,
-          description: prodDesc, 
-          colors: prodColors.split(",").map(c => c.trim()).filter(c => c !== ""), 
-          sizes: prodSizes.split(",").map(s => s.trim()).filter(s => s !== ""),
-          imageUrl: imageUrl 
-        }
-      })
-    });
-
-    if (res.ok) {
-      setMessage(editingId ? "Produit modifié !" : "Produit ajouté !");
-      resetProdForm();
-      fetchData();
-    } else {
-      setMessage("Erreur.");
+      if (res.ok) {
+        setMessage(editingId ? "Produit modifié !" : "Produit ajouté !");
+        resetProdForm();
+        fetchData();
+      } else {
+        setMessage("Erreur lors de la sauvegarde.");
+      }
+    } catch (err) {
+      console.error("Erreur upload produit:", err);
+      setMessage("Erreur lors de l'upload de l'image.");
+    } finally {
+      setLoadingProd(false);
     }
-    setLoading(false);
   };
 
   const handleDelete = async (type: string, id: string, name: string) => {
@@ -274,8 +287,8 @@ export default function AdminPage() {
                 <span className="text-bb-ink/40 text-[10px] font-black uppercase tracking-[.25em]">{bookImage ? bookImage.name : (currentBookCover ? "Changer la couverture" : "Uploader la couverture")}</span>
               </label>
             </div>
-            <button disabled={loading} className="w-full py-5 bg-bb-ink text-bb-cream rounded-full font-black uppercase tracking-[.3em] text-[10px] hover:bg-bb-rose transition-all shadow-xl active:scale-95 disabled:opacity-50">
-              {loading ? "Chargement..." : (editingId ? "Enregistrer les modifications" : "Ajouter la Lecture")}
+            <button disabled={loadingBook} className="w-full py-5 bg-bb-ink text-bb-cream rounded-full font-black uppercase tracking-[.3em] text-[10px] hover:bg-bb-rose transition-all shadow-xl active:scale-95 disabled:opacity-50">
+              {loadingBook ? "Chargement..." : (editingId ? "Enregistrer les modifications" : "Ajouter la Lecture")}
             </button>
           </form>
         </FadeIn>
@@ -308,8 +321,8 @@ export default function AdminPage() {
                 <span className="text-bb-ink/40 text-[10px] font-black uppercase tracking-[.25em]">{prodImage ? prodImage.name : (currentProdImage ? "Changer la photo" : "Uploader la photo")}</span>
               </label>
             </div>
-            <button disabled={loading} className="w-full py-5 bg-bb-ink text-bb-cream rounded-full font-black uppercase tracking-[.3em] text-[10px] hover:bg-bb-rose transition-all shadow-xl active:scale-95 disabled:opacity-50">
-              {loading ? "Chargement..." : (editingId ? "Enregistrer les modifications" : "Ajouter au Catalogue")}
+            <button disabled={loadingProd} className="w-full py-5 bg-bb-ink text-bb-cream rounded-full font-black uppercase tracking-[.3em] text-[10px] hover:bg-bb-rose transition-all shadow-xl active:scale-95 disabled:opacity-50">
+              {loadingProd ? "Upload en cours..." : (editingId ? "Enregistrer les modifications" : "Ajouter au Catalogue")}
             </button>
           </form>
         </FadeIn>
