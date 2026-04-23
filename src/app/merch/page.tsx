@@ -104,7 +104,7 @@ export default function MerchPage() {
         <FadeIn>
           <h1 className="text-4xl md:text-5xl font-serif text-bb-ink mb-4">La Boutique</h1>
           <p className="text-bb-ink/70 mb-10 text-lg">
-            Soutenez le club avec nos accessoires exclusifs pensés pour les lectrices passionnées.
+            Tes essentiels pour entrer dans ta baddies era ❤️🔥
           </p>
         </FadeIn>
 
