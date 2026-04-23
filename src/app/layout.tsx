@@ -11,6 +11,9 @@ const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfa
 export const metadata: Metadata = {
   title: "The Bookish Baddies Club",
   description: "A modern, cozy book club application.",
+  icons: {
+    icon: "/favicon-bbc.png",
+  }
 };
 
 export default function RootLayout({
