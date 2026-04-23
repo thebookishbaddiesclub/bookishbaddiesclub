@@ -6,7 +6,6 @@ import {
   Plus, Book, ShoppingBag, Upload, Check, Trash2, Edit2, 
   Users, BarChart3, BookOpen, LogOut, LayoutDashboard 
 } from "lucide-react";
-import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 
 export default function AdminPage() {
@@ -74,11 +73,15 @@ export default function AdminPage() {
     try {
       let imageUrl = currentBookCover;
       if (bookImage) {
-        const newBlob = await upload(`${Date.now()}-${bookImage.name}`, bookImage, {
-          access: "public",
-          handleUploadUrl: "/api/upload",
+        const formData = new FormData();
+        formData.append("file", bookImage);
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
         });
-        imageUrl = newBlob.url;
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok) throw new Error(uploadData.error || "Upload échoué");
+        imageUrl = uploadData.url;
       }
 
       const method = editingId ? "PUT" : "POST";
@@ -116,11 +119,15 @@ export default function AdminPage() {
     try {
       let imageUrl = currentProdImage;
       if (prodImage) {
-        const newBlob = await upload(`${Date.now()}-${prodImage.name}`, prodImage, {
-          access: "public",
-          handleUploadUrl: "/api/upload",
+        const formData = new FormData();
+        formData.append("file", prodImage);
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
         });
-        imageUrl = newBlob.url;
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok) throw new Error(uploadData.error || "Upload échoué");
+        imageUrl = uploadData.url;
       }
 
       const method = editingId ? "PUT" : "POST";
