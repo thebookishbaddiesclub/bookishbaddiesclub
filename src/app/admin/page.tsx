@@ -100,9 +100,9 @@ export default function AdminPage() {
       } else {
         setMessage("Erreur lors de la sauvegarde.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erreur upload livre:", err);
-      setMessage("Erreur lors de l'upload de l'image.");
+      setMessage(`Erreur upload: ${err?.message || "inconnue"}`);
     } finally {
       setLoadingBook(false);
     }
@@ -150,9 +150,9 @@ export default function AdminPage() {
       } else {
         setMessage("Erreur lors de la sauvegarde.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erreur upload produit:", err);
-      setMessage("Erreur lors de l'upload de l'image.");
+      setMessage(`Erreur upload: ${err?.message || "inconnue"}`);
     } finally {
       setLoadingProd(false);
     }

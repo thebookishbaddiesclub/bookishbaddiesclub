@@ -4,38 +4,31 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request): Promise<NextResponse> {
   const body = (await request.json()) as HandleUploadBody;
 
+  console.log("[upload] Received upload request, type:", body.type);
+
   try {
     const jsonResponse = await handleUpload({
       body,
       request,
-      onBeforeGenerateToken: async (
-        pathname,
-        /* clientPayload */
-      ) => {
-        /**
-         * Generate a client token for the browser to upload the file directly.
-         * ---------------------------------------------------------
-         * IMPORTANT: Here you should check for the user's session 
-         * or a custom admin password to authorize the upload.
-         */
+      onBeforeGenerateToken: async (pathname) => {
+        console.log("[upload] Generating token for:", pathname);
         return {
-          allowedContentTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-          tokenPayload: JSON.stringify({
-            // optional, sent to your server-side onUploadCompleted callback
-          }),
+          allowedContentTypes: ["image/jpeg", "image/png", "image/gif", "image/webp", "image/jpg"],
+          tokenPayload: JSON.stringify({}),
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
-        // This is called on your server after a successful upload
-        console.log("Blob upload completed", blob, tokenPayload);
+        console.log("[upload] Upload completed successfully:", blob.url);
       },
     });
 
     return NextResponse.json(jsonResponse);
   } catch (error) {
+    const message = (error as Error).message;
+    console.error("[upload] Upload failed:", message);
     return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 400 }, // The error from focus onBeforeGenerateToken
+      { error: message },
+      { status: 400 },
     );
   }
 }
