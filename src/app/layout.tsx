@@ -29,7 +29,7 @@ export default function RootLayout({
       <body className="bg-bb-cream text-bb-ink font-sans antialiased">
         <Navbar />
         
-        <main className="flex-grow pt-[250px] pb-12 px-6 max-w-7xl mx-auto w-full relative z-10">
+        <main className="flex-grow pt-[195px] md:pt-[210px] pb-12 px-6 max-w-7xl mx-auto w-full relative z-10">
           {children}
         </main>
         
