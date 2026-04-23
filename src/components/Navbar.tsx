@@ -31,11 +31,11 @@ export default function Navbar() {
   return (
     <header className={cn(
       "fixed top-0 left-0 right-0 z-[60] flex flex-col items-center transition-all duration-700 ease-in-out",
-      "pointer-events-none", // Blocks header itself but not children
-      isScrolled ? "py-4" : "py-10"
+      "pointer-events-none",
+      isScrolled ? "py-3" : "py-6"
     )}>
       {/* LOGO */}
-      <Link href="/" className="mb-6 pointer-events-auto">
+      <Link href="/" className="mb-4 pointer-events-auto">
         <Image 
           src="/logo-club.png" 
           alt="Logo" 
@@ -43,7 +43,7 @@ export default function Navbar() {
           height={220} 
           className={cn(
             "w-auto transition-all duration-700 ease-in-out origin-top",
-            isScrolled ? "h-[70px] md:h-[90px] drop-shadow-sm" : "h-[120px] md:h-[200px]"
+            isScrolled ? "h-[60px] md:h-[80px] drop-shadow-sm" : "h-[100px] md:h-[180px]"
           )} 
           priority 
         />
@@ -53,8 +53,8 @@ export default function Navbar() {
       <nav className={cn(
         "flex items-center backdrop-blur-xl border border-bb-beige/30 rounded-full transition-all duration-700 ease-in-out pointer-events-auto shadow-[0_8px_30px_rgb(0,0,0,0.04)]",
         isScrolled 
-          ? "px-8 py-3 gap-8 bg-white/40 scale-95" 
-          : "px-12 py-5 gap-12 bg-white/60"
+          ? "px-8 py-2.5 gap-8 bg-white/40 scale-95" 
+          : "px-12 py-4 gap-12 bg-white/60"
       )}>
         <ul className="hidden md:flex items-center gap-10">
           {navLinks.map((link) => {
@@ -82,7 +82,55 @@ export default function Navbar() {
         </button>
       </nav>
 
-      {/* TODO: Mobile Drawer could be added here later if needed */}
+      {/* Mobile Menu Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-[100] bg-bb-cream flex flex-col pointer-events-auto"
+          >
+            <div className="flex justify-between items-center p-6 border-b border-bb-beige/20">
+              <span className="font-abril text-2xl text-bb-rose">Menu</span>
+              <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-bb-ink">
+                <X className="w-8 h-8" />
+              </button>
+            </div>
+            
+            <nav className="flex-grow flex flex-col justify-center items-center gap-8 p-6">
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                const isActive = pathname === link.href;
+                return (
+                  <Link 
+                    key={link.href} 
+                    href={link.href} 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={cn(
+                      "flex items-center gap-4 text-xl uppercase tracking-widest font-bold transition-all duration-300",
+                      isActive ? "text-bb-rose scale-110" : "text-bb-ink/70"
+                    )}
+                  >
+                    <Icon className="w-6 h-6" />
+                    <span>{link.label}</span>
+                  </Link>
+                );
+              })}
+              
+              <div className="mt-12 flex gap-6">
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="p-4 rounded-full bg-bb-beige/20 text-bb-ink">
+                  <Instagram className="w-6 h-6" />
+                </a>
+              </div>
+            </nav>
+            
+            <div className="p-12 flex justify-center">
+               <Image src="/logo-club.png" alt="Logo" width={150} height={60} className="opacity-30 h-auto w-auto" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
