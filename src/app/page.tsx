@@ -1,4 +1,6 @@
-"import { useState, useEffect, useRef } from "react";
+"use client";
+
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BookOpen, Sparkles } from "lucide-react";
@@ -111,7 +113,6 @@ function FlipCard({
       </motion.div>
     </div>
   );
-}
 }
 
 export default function Home() {
