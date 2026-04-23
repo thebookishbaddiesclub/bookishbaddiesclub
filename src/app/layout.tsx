@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description: "A modern, cozy book club application.",
   icons: {
     icon: "/favicon-bbc.png",
+    shortcut: "/favicon-bbc.png",
+    apple: "/favicon-bbc.png",
   }
 };
 
@@ -23,6 +25,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className={`${montserrat.variable} ${abril.variable} ${playfair.variable} scroll-smooth`}>
+      <head>
+        <link rel="icon" href="/favicon-bbc.png" />
+        <link rel="shortcut icon" href="/favicon-bbc.png" />
+        <link rel="apple-touch-icon" href="/favicon-bbc.png" />
+      </head>
       <body className="bg-bb-cream text-bb-ink font-sans antialiased">
         <Navbar />
         
