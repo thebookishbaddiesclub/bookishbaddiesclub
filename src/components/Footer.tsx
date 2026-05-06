@@ -54,18 +54,29 @@ export default function Footer() {
         </div>
 
         {/* Bas du footer */}
-        <div className="pt-10 border-t border-bb-ink/5 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-[10px] uppercase tracking-widest font-bold text-bb-ink/30">
+        <div className="pt-10 border-t border-bb-ink/5 flex flex-col items-center gap-6">
+          <p className="text-[10px] uppercase tracking-widest font-bold text-bb-ink/30 text-center">
             © 2026 The Bookish Baddies Club
           </p>
-          <div className="flex items-center gap-8">
+          
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="w-1 h-1 bg-bb-rose rounded-full"></span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-bb-ink/40">
+                Made with Love — Designed by{" "}
+                <a 
+                  href="https://www.atelierdesignbyanais.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-bb-rose transition-colors"
+                >
+                  Atelier Design by Anaïs
+                </a>
+              </span>
+            </div>
             <Link href="/admin" className="text-[10px] uppercase tracking-widest font-bold text-bb-ink/20 hover:text-bb-ink transition-colors">
               Accès Admin
             </Link>
-            <div className="flex items-center gap-2">
-              <span className="w-1 h-1 bg-bb-rose rounded-full"></span>
-              <span className="text-[9px] font-black uppercase tracking-widest text-bb-ink/40">Made with Love</span>
-            </div>
           </div>
         </div>
       </div>
