@@ -59,6 +59,8 @@ export default async function LecturesPage() {
                     author={book.author} 
                     coverUrl={book.coverUrl}
                     month={book.month}
+                    resume={book.resume}
+                    lien_place_des_libraires={book.lien_place_des_libraires}
                     delay={index * 0.1} 
                   />
                 ))}
@@ -82,6 +84,8 @@ export default async function LecturesPage() {
                     author={book.author} 
                     coverUrl={book.coverUrl}
                     month={book.month}
+                    resume={book.resume}
+                    lien_place_des_libraires={book.lien_place_des_libraires}
                     delay={index * 0.1} 
                   />
                 ))}
