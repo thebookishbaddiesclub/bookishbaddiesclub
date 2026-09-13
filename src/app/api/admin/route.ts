@@ -43,6 +43,9 @@ export async function POST(request: Request) {
   try {
     const table = type === "lectures" ? "books" : "products";
     const adminSupabase = getAdminSupabase();
+    if (table === "products" && (!Number.isSafeInteger(data?.stock) || data.stock < 0)) {
+      return NextResponse.json({ error: "Le stock doit être un entier positif ou nul." }, { status: 400 });
+    }
     const { error } = await adminSupabase.from(table).insert([data]);
 
     if (error) throw error;
@@ -59,12 +62,18 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
-  const { type, id, data } = await request.json();
+  const { type, id, data, expectedStock } = await request.json();
 
   try {
     const table = type === "lectures" ? "books" : "products";
     const adminSupabase = getAdminSupabase();
-    const { error } = await adminSupabase.from(table).update(data).eq("id", id);
+    if (table === "products" && (!Number.isSafeInteger(data?.stock) || data.stock < 0 || !Number.isSafeInteger(expectedStock))) {
+      return NextResponse.json({ error: "Stock invalide. Recharge les produits avant de modifier." }, { status: 400 });
+    }
+    let update = adminSupabase.from(table).update(data).eq("id", id);
+    if (table === "products") update = update.eq("stock", expectedStock);
+    const { data: updated, error } = await update.select("id");
+    if (!error && !updated?.length) return NextResponse.json({ error: "Le stock a changé depuis le chargement. Recharge la page avant de modifier." }, { status: 409 });
     
     if (error) throw error;
     return NextResponse.json({ success: true });

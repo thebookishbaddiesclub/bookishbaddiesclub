@@ -17,6 +17,7 @@ export default function AdminPage() {
   // Data lists
   const [books, setBooks] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [originalStock, setOriginalStock] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Form states for Book
@@ -140,6 +141,7 @@ export default function AdminPage() {
         body: JSON.stringify({
           type: "merch",
           id: editingId,
+          expectedStock: originalStock,
           data: { 
             name: prodName, 
             price: parseFloat(prodPrice), 
@@ -157,7 +159,8 @@ export default function AdminPage() {
         resetProdForm();
         fetchData();
       } else {
-        setMessage("Erreur lors de la sauvegarde.");
+        const result = await res.json();
+        setMessage(result.error || "Erreur lors de la sauvegarde.");
       }
     } catch (err: any) {
       console.error("Erreur upload produit:", err);
@@ -196,6 +199,7 @@ export default function AdminPage() {
   };
 
   const startEditProduct = (prod: any) => {
+    setOriginalStock(prod.stock);
     setEditingId(prod.id);
     setProdName(prod.name);
     setProdPrice(prod.price.toString());

@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "tsx --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "test:concurrency": "node --test tests/concurrency.mjs",
+    "stock:reconcile": "tsx --env-file=.env.local scripts/reconcile-stock.ts"
   },
   "dependencies": {
     "@stripe/stripe-js": "^9.1.0",
@@ -22,13 +26,16 @@
     "tailwind-merge": "^3.0.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "embedded-postgres": "^18.4.0-beta.17",
     "eslint": "^9.0.0",
     "eslint-config-next": "15.1.11",
     "tailwindcss": "^4.0.0",
+    "tsx": "^4.23.13",
     "typescript": "^5.0.0"
   }
 }

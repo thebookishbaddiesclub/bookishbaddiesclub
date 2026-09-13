@@ -4,8 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingBag, Check } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { availableStock } from "@/lib/stock";
 
 interface Product {
+  stock?: number;
   id: string;
   name: string;
   price: number;
@@ -17,11 +19,12 @@ interface Product {
 
 interface ProductModalProps {
   product: Product | null;
+  quantityInCart: number;
   onClose: () => void;
   onAddToCart: (p: any, config: { color: string, size: string }) => void;
 }
 
-export default function ProductModal({ product, onClose, onAddToCart }: ProductModalProps) {
+export default function ProductModal({ product, quantityInCart, onClose, onAddToCart }: ProductModalProps) {
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [added, setAdded] = useState(false);
@@ -29,6 +32,7 @@ export default function ProductModal({ product, onClose, onAddToCart }: ProductM
   if (!product) return null;
 
   const handleAdd = () => {
+    if (quantityInCart >= availableStock(product)) return;
     onAddToCart(product, { color: selectedColor, size: selectedSize });
     setAdded(true);
     setTimeout(() => {
@@ -122,13 +126,13 @@ export default function ProductModal({ product, onClose, onAddToCart }: ProductM
 
             <button 
               onClick={handleAdd}
-              disabled={added}
+              disabled={added || quantityInCart >= availableStock(product)}
               className={`w-full py-4 rounded-full font-bold flex items-center justify-center gap-2 transition-all ${added ? "bg-green-500 text-white" : "bg-bb-ink text-bb-cream hover:bg-bb-rose shadow-lg"}`}
             >
               {added ? (
                 <><Check className="w-5 h-5" /> Ajouté !</>
               ) : (
-                <><ShoppingBag className="w-5 h-5" /> Ajouter au panier</>
+                <><ShoppingBag className="w-5 h-5" /> {availableStock(product) === 0 ? "Indisponible" : quantityInCart >= availableStock(product) ? "Quantité maximale atteinte" : "Ajouter au panier"}</>
               )}
             </button>
           </div>
