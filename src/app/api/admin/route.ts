@@ -21,11 +21,13 @@ export async function GET() {
     const adminSupabase = getAdminSupabase();
     const { data: books, error: booksError } = await adminSupabase.from("books").select("*").order("created_at", { ascending: true });
     const { data: products, error: productsError } = await adminSupabase.from("products").select("*").order("created_at", { ascending: true });
+    const { data: history } = await adminSupabase.from("reading_history").select("*").order("created_at", { ascending: false });
+    const { data: events } = await adminSupabase.from("events").select("*").order("starts_at", { ascending: true });
 
     if (booksError) throw booksError;
     if (productsError) throw productsError;
 
-    return NextResponse.json({ lectures: { books }, merch: { products } });
+    return NextResponse.json({ lectures: { books }, merch: { products }, history: history || [], events: events || [] });
   } catch (error: any) {
     console.error("GET error:", error);
     return NextResponse.json({ error: error?.message || "Erreur lecture données" }, { status: 500 });
@@ -41,7 +43,7 @@ export async function POST(request: Request) {
   const { type, data } = await request.json();
 
   try {
-    const table = type === "lectures" ? "books" : "products";
+    const table = type === "lectures" ? "books" : type === "history" ? "reading_history" : type === "events" ? "events" : "products";
     const adminSupabase = getAdminSupabase();
     if (table === "products" && (!Number.isSafeInteger(data?.stock) || data.stock < 0)) {
       return NextResponse.json({ error: "Le stock doit être un entier positif ou nul." }, { status: 400 });
@@ -65,7 +67,7 @@ export async function PUT(request: Request) {
   const { type, id, data, expectedStock } = await request.json();
 
   try {
-    const table = type === "lectures" ? "books" : "products";
+    const table = type === "lectures" ? "books" : type === "history" ? "reading_history" : type === "events" ? "events" : "products";
     const adminSupabase = getAdminSupabase();
     if (table === "products" && (!Number.isSafeInteger(data?.stock) || data.stock < 0 || !Number.isSafeInteger(expectedStock))) {
       return NextResponse.json({ error: "Stock invalide. Recharge les produits avant de modifier." }, { status: 400 });
@@ -98,7 +100,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const table = type === "lectures" ? "books" : "products";
+    const table = type === "lectures" ? "books" : type === "history" ? "reading_history" : type === "events" ? "events" : "products";
     const adminSupabase = getAdminSupabase();
     const { error } = await adminSupabase.from(table).delete().eq("id", id);
 
