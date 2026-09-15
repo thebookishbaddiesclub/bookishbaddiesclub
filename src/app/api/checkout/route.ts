@@ -33,6 +33,9 @@ export async function POST(request: Request) {
       p_session_id: session.id, p_items: items,
       p_expires_at: new Date(session.expires_at * 1000).toISOString(),
     });
+    if (!reservationError) {
+      await database.rpc("update_order_contact", { p_session_id: session.id, p_email: session.customer_details?.email || "", p_name: session.customer_details?.name || "" });
+    }
     if (reservationError || !session.url) {
       // A timeout can mean the DB committed. Expire at Stripe first; only then release.
       try {
