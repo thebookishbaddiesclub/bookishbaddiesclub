@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStockDatabase, getStripe } from "@/lib/server/clients";
+import { sendOrderEmails } from "@/lib/email";
 
 export async function POST(request: Request) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -29,11 +30,12 @@ export async function POST(request: Request) {
         if (error) throw error;
       }
     } else if (session.payment_status === "paid") {
-      const { error } = await database.rpc("settle_stock", {
+      const { data: settled, error } = await database.rpc("settle_stock", {
         p_session_id: session.id, p_event_id: event.id,
         p_amount_total: session.amount_total, p_currency: session.currency,
       });
       if (error) throw error;
+      if (settled !== "already_paid") await sendOrderEmails({ customerEmail: session.customer_details?.email, customerName: session.customer_details?.name, sessionId: session.id, items: session.metadata?.cart_summary || "Commande boutique", total: session.amount_total, promoCode: session.metadata?.promotion_code });
     }
     return NextResponse.json({ received: true });
   } catch {
