@@ -1,23 +1,26 @@
 import FadeIn from "@/components/FadeIn";
 import BookCard from "@/components/BookCard";
 import { supabase } from "@/lib/supabase";
+import Image from "next/image";
 
 export const dynamic = "force-dynamic";
 
 export default async function LecturesPage() {
   let books: any[] = [];
+  let history: any[] = [];
   
   try {
-    const { data } = await supabase.from("books").select("*").order("created_at", { ascending: true });
+    const [{ data }, { data: archived }] = await Promise.all([
+      supabase.from("books").select("*").order("created_at", { ascending: false }),
+      supabase.from("reading_history").select("*").order("created_at", { ascending: true }),
+    ]);
     books = data || [];
+    history = archived || [];
   } catch (e) {
     console.warn("Supabase not available during build", e);
   }
   
-  const perpignanBooks = books.filter((b: any) => b.city === "Perpignan");
-  const montpellierBooks = books.filter((b: any) => b.city === "Montpellier");
-
-  const isEmpty = books.length === 0;
+  const isEmpty = books.length === 0 && history.length === 0;
 
   return (
     <div className="py-12 space-y-32">
@@ -43,55 +46,10 @@ export default async function LecturesPage() {
         </FadeIn>
       ) : (
         <>
-          {/* Perpignan Section */}
-          {perpignanBooks.length > 0 && (
-            <section className="space-y-12">
-              <FadeIn direction="right" className="flex items-center gap-6">
-                <h2 className="text-3xl md:text-4xl font-serif text-bb-rose shrink-0 italic">Perpignan</h2>
-                <div className="h-[1px] w-full bg-gradient-to-r from-bb-beige to-transparent"></div>
-              </FadeIn>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {perpignanBooks.map((book: any, index: number) => (
-                  <BookCard 
-                    key={book.id} 
-                    title={book.title} 
-                    author={book.author} 
-                    coverUrl={book.coverUrl}
-                    month={book.month}
-                    resume={book.resume}
-                    lien_place_des_libraires={book.lien_place_des_libraires}
-                    delay={index * 0.1} 
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+          {books.length > 0 && <section className="space-y-12"><FadeIn direction="right" className="flex items-center gap-6"><h2 className="text-3xl md:text-4xl font-serif text-bb-rose shrink-0 italic">Ce mois-ci</h2><div className="h-[1px] w-full bg-gradient-to-r from-bb-beige to-transparent"></div></FadeIn><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">{books.map((book: any, index: number) => <BookCard key={book.id} title={book.title} author={book.author} coverUrl={book.coverUrl} month={book.month} resume={book.resume} lien_place_des_libraires={book.lien_place_des_libraires} delay={index * 0.1} />)}</div></section>}
 
-          {/* Montpellier Section */}
-          {montpellierBooks.length > 0 && (
-            <section className="space-y-12">
-              <FadeIn direction="right" className="flex items-center gap-6">
-                <h2 className="text-3xl md:text-4xl font-serif text-bb-rose shrink-0 italic">Montpellier</h2>
-                <div className="h-[1px] w-full bg-gradient-to-r from-bb-beige to-transparent"></div>
-              </FadeIn>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {montpellierBooks.map((book: any, index: number) => (
-                  <BookCard 
-                    key={book.id} 
-                    title={book.title} 
-                    author={book.author} 
-                    coverUrl={book.coverUrl}
-                    month={book.month}
-                    resume={book.resume}
-                    lien_place_des_libraires={book.lien_place_des_libraires}
-                    delay={index * 0.1} 
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+          {history.length > 0 && <section className="space-y-12"><FadeIn direction="right" className="flex items-center gap-6"><h2 className="text-3xl md:text-4xl font-serif text-bb-ink italic">Lectures passées</h2><div className="h-[1px] w-full bg-gradient-to-r from-bb-beige to-transparent"></div></FadeIn><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">{history.map((book: any, index: number) => <FadeIn key={book.id} delay={index * 0.08}><article className="group relative overflow-hidden rounded-[2rem] border border-bb-beige bg-white/60 shadow-sm"><div className="relative aspect-[3/4] bg-bb-beige/30">{book.cover_url ? <Image src={book.cover_url} alt={book.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center font-serif text-4xl text-bb-ink/20">📖</div>}<div className="absolute inset-x-0 bottom-0 translate-y-full bg-bb-ink/90 p-4 text-bb-cream transition-transform duration-300 group-hover:translate-y-0"><p className="text-sm font-semibold">{book.month}</p><p className="text-xs uppercase tracking-widest text-bb-cream/70">{book.city}</p></div></div><div className="p-5"><h3 className="font-serif text-xl text-bb-ink">{book.title}</h3><p className="text-sm text-bb-ink/60">{book.author}</p>{book.rating != null && <p className="mt-2 text-bb-gold">{"★".repeat(Math.round(book.rating))}{"☆".repeat(5 - Math.round(book.rating))}</p>}</div></article></FadeIn>)}</div></section>}
+
         </>
       )}
 
