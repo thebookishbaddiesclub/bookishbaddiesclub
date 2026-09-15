@@ -44,22 +44,27 @@ export default function AdminPage() {
   const [promoForm, setPromoForm] = useState({ code: "", type: "percent", value: "" });
   const [historyForm, setHistoryForm] = useState({ title: "", author: "", city: "Perpignan", month: "", rating: "", review: "", cover_url: "" });
   const [eventForm, setEventForm] = useState({ title: "", starts_at: "", city: "Perpignan", summary: "", action_url: "", image_url: "" });
+  const [events, setEvents] = useState<any[]>([]);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
   const fetchData = async () => {
     const res = await fetch("/api/admin", { credentials: "include" });
     const data = await res.json();
     if (data.lectures) setBooks(data.lectures.books || []);
     if (data.merch) setProducts(data.merch.products || []);
+    setEvents(data.events || []);
     const promoRes = await fetch("/api/admin/promos", { credentials: "include" });
     if (promoRes.ok) setPromos((await promoRes.json()).promos || []);
   };
 
-  const addCommunityItem = async (type: "history" | "events", data: any) => {
-    const res = await fetch("/api/admin", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type, data }) });
+  const addCommunityItem = async (type: "history" | "events", data: any, id?: string | null) => {
+    const res = await fetch("/api/admin", { method: id ? "PUT" : "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type, id, data, expectedStock: 0 }) });
     const result = await res.json();
     setMessage(res.ok ? "Enregistré !" : (result.error || "Erreur"));
-    if (res.ok) { setHistoryForm({ title: "", author: "", city: "Perpignan", month: "", rating: "", review: "", cover_url: "" }); setEventForm({ title: "", starts_at: "", city: "Perpignan", summary: "", action_url: "", image_url: "" }); fetchData(); }
+    if (res.ok) { setHistoryForm({ title: "", author: "", city: "Perpignan", month: "", rating: "", review: "", cover_url: "" }); setEventForm({ title: "", starts_at: "", city: "Perpignan", summary: "", action_url: "", image_url: "" }); setEditingEventId(null); fetchData(); }
   };
+
+  const editEvent = (event: any) => { setEditingEventId(event.id); setEventForm({ title: event.title, starts_at: event.starts_at, city: event.city, summary: event.summary || "", action_url: event.action_url || "", image_url: event.image_url || "" }); window.scrollTo({ top: 300, behavior: "smooth" }); };
 
   const createPromo = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -388,7 +393,7 @@ export default function AdminPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <FadeIn className="bg-white/40 p-8 rounded-[2.5rem] border border-bb-beige space-y-4"><h2 className="text-2xl font-serif italic">Archiver une lecture</h2><input placeholder="Titre" value={historyForm.title} onChange={e => setHistoryForm({ ...historyForm, title: e.target.value })} className="admin-input" required /><input placeholder="Auteur" value={historyForm.author} onChange={e => setHistoryForm({ ...historyForm, author: e.target.value })} className="admin-input" required /><div className="grid grid-cols-2 gap-3"><input placeholder="Mois / année" value={historyForm.month} onChange={e => setHistoryForm({ ...historyForm, month: e.target.value })} className="admin-input" required /><select value={historyForm.city} onChange={e => setHistoryForm({ ...historyForm, city: e.target.value })} className="admin-input"><option>Perpignan</option><option>Montpellier</option></select></div><input type="number" min="0" max="5" step="0.5" placeholder="Note sur 5" value={historyForm.rating} onChange={e => setHistoryForm({ ...historyForm, rating: e.target.value })} className="admin-input" /><textarea placeholder="Résumé / avis" value={historyForm.review} onChange={e => setHistoryForm({ ...historyForm, review: e.target.value })} className="admin-input" /><button onClick={() => addCommunityItem("history", { ...historyForm, rating: historyForm.rating ? Number(historyForm.rating) : null })} className="admin-button">Archiver</button></FadeIn>
-        <FadeIn className="bg-white/40 p-8 rounded-[2.5rem] border border-bb-beige space-y-4"><h2 className="text-2xl font-serif italic">Ajouter un événement</h2><input placeholder="Titre" value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} className="admin-input" required /><input type="datetime-local" value={eventForm.starts_at} onChange={e => setEventForm({ ...eventForm, starts_at: new Date(e.target.value).toISOString() })} className="admin-input" required /><input placeholder="Ville" value={eventForm.city} onChange={e => setEventForm({ ...eventForm, city: e.target.value })} className="admin-input" required /><textarea placeholder="Résumé" value={eventForm.summary} onChange={e => setEventForm({ ...eventForm, summary: e.target.value })} className="admin-input" /><input type="url" placeholder="Lien d'inscription" value={eventForm.action_url} onChange={e => setEventForm({ ...eventForm, action_url: e.target.value })} className="admin-input" /><button onClick={() => addCommunityItem("events", eventForm)} className="admin-button">Ajouter l’événement</button></FadeIn>
+        <FadeIn className="bg-white/40 p-8 rounded-[2.5rem] border border-bb-beige space-y-4"><h2 className="text-2xl font-serif italic">{editingEventId ? "Modifier un événement" : "Ajouter un événement"}</h2><input placeholder="Titre" value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} className="admin-input" required /><input type="datetime-local" value={eventForm.starts_at ? eventForm.starts_at.slice(0, 16) : ""} onChange={e => setEventForm({ ...eventForm, starts_at: new Date(e.target.value).toISOString() })} className="admin-input" required /><input placeholder="Ville" value={eventForm.city} onChange={e => setEventForm({ ...eventForm, city: e.target.value })} className="admin-input" required /><textarea placeholder="Résumé" value={eventForm.summary} onChange={e => setEventForm({ ...eventForm, summary: e.target.value })} className="admin-input" /><input type="url" placeholder="Lien d'inscription" value={eventForm.action_url} onChange={e => setEventForm({ ...eventForm, action_url: e.target.value })} className="admin-input" /><button onClick={() => addCommunityItem("events", eventForm, editingEventId)} className="admin-button">{editingEventId ? "Enregistrer" : "Ajouter l’événement"}</button>{editingEventId && <button onClick={() => { setEditingEventId(null); setEventForm({ title: "", starts_at: "", city: "Perpignan", summary: "", action_url: "", image_url: "" }); }} className="ml-3 text-xs text-bb-rose">Annuler</button>}<div className="border-t border-bb-beige pt-4 space-y-2">{events.map(event => <div key={event.id} className="flex justify-between text-sm"><span>{event.title}</span><button onClick={() => editEvent(event)} className="text-bb-rose">Modifier</button></div>)}</div></FadeIn>
       </div>
 
       {/* Liste Contenu Actuel */}
