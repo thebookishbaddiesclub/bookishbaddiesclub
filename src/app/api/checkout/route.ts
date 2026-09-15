@@ -6,6 +6,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => { throw new CartError("Panier invalide."); });
     const cart = parseCart(body?.cart);
+    const promotionCodeId = typeof body?.promotionCodeId === "string" && /^promo_[A-Za-z0-9]+$/.test(body.promotionCodeId)
+      ? body.promotionCodeId : null;
     const database = getStockDatabase();
     const { data, error } = await database.rpc("stock_catalog");
     if (error) throw error;
@@ -20,7 +22,8 @@ export async function POST(request: Request) {
         price_data: { currency: "eur", product_data: { name: item.name, metadata: { product_id: item.id } }, unit_amount: item.unit_amount },
         quantity: item.quantity,
       })),
-      metadata: { stock_flow: "v1" },
+      ...(promotionCodeId ? { discounts: [{ promotion_code: promotionCodeId }] } : {}),
+      metadata: { stock_flow: "v1", promotion_code: promotionCodeId ?? "", cart_summary: items.map(item => `${item.name} × ${item.quantity}`).join(", ") },
       expires_at: Math.floor(Date.now() / 1000) + 35 * 60,
       success_url: `${origin}/success`,
       cancel_url: `${origin}/merch?canceled=true`,
