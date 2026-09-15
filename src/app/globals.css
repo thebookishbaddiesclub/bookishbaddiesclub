@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@layer components {
+  .admin-input { @apply w-full rounded-2xl border border-bb-beige bg-white px-5 py-3 text-sm outline-none focus:border-bb-rose/40; }
+  .admin-button { @apply rounded-full bg-bb-ink px-5 py-3 text-[10px] font-black uppercase tracking-widest text-bb-cream; }
+}
+
 @theme {
   --color-bb-cream: #FAF8F5;
   --color-bb-beige: #E6DCD3;
