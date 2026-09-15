@@ -1,0 +1,13 @@
+"use client";
+import { useEffect, useState } from "react";
+
+const labels: Record<string, string> = { received: "Commande reçue", ready_for_pickup: "À remettre en main propre", handed_over: "Remise effectuée", cancelled: "Annulée" };
+
+export default function OrdersAdminPage() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [message, setMessage] = useState("");
+  const load = async () => { const response = await fetch("/api/admin/orders", { credentials: "include" }); if (response.ok) setOrders((await response.json()).orders || []); };
+  useEffect(() => { void load(); }, []);
+  const update = async (order: any, status: string) => { const note = window.prompt("Note pour cette commande (facultatif)", order.fulfillment_note || ""); const response = await fetch("/api/admin/orders", { method: "PATCH", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: order.session_id, status, note }) }); setMessage(response.ok ? "Commande mise à jour." : "Mise à jour impossible."); void load(); };
+  return <div className="py-12 space-y-10"><div className="flex items-center justify-between"><div><h1 className="text-5xl font-serif italic">Commandes</h1><p className="mt-3 text-bb-ink/60">Suivi des précommandes et remises en main propre.</p></div><a href="/admin" className="rounded-full border border-bb-beige px-5 py-3 text-xs">Retour à l’admin</a></div>{message && <p className="text-bb-rose">{message}</p>}<div className="space-y-4">{orders.map(order => <article key={order.session_id} className="rounded-[2rem] border border-bb-beige bg-white/60 p-6"><div className="flex flex-wrap items-center justify-between gap-4"><div><p className="font-bold">{order.customer_name || "Cliente"}</p><p className="text-sm text-bb-ink/60">{order.customer_email || "E-mail en attente"}</p><p className="mt-2 text-xs text-bb-ink/50">{new Date(order.created_at).toLocaleString("fr-FR")}</p></div><span className="rounded-full bg-bb-beige px-4 py-2 text-xs font-bold">{labels[order.fulfillment_status] || order.fulfillment_status}</span></div><p className="my-4 text-sm">{(order.items || []).map((item: any) => `${item.name || item.id} × ${item.quantity}`).join(", ")}</p><div className="flex flex-wrap gap-2">{Object.entries(labels).map(([status, label]) => <button key={status} onClick={() => update(order, status)} className="rounded-full border border-bb-beige px-4 py-2 text-xs hover:border-bb-rose">{label}</button>)}</div>{order.fulfillment_note && <p className="mt-3 text-sm italic text-bb-ink/60">{order.fulfillment_note}</p>}</article>)}{orders.length === 0 && <p className="py-20 text-center text-bb-ink/40">Aucune commande pour le moment.</p>}</div></div>;
+}
