@@ -29,6 +29,9 @@ export default function AdminPage() {
   const [currentBookCover, setCurrentBookCover] = useState("");
   const [bookResume, setBookResume] = useState("");
   const [bookLink, setBookLink] = useState("");
+  const [bookArchived, setBookArchived] = useState(false);
+  const [bookRating, setBookRating] = useState("");
+  const [bookReview, setBookReview] = useState("");
 
   // Form states for Merch
   const [prodName, setProdName] = useState("");
@@ -92,7 +95,7 @@ export default function AdminPage() {
 
   const resetBookForm = () => {
     setEditingId(null);
-    setBookTitle(""); setBookAuthor(""); setBookMonth(""); setBookCity("Perpignan"); setBookImage(null); setCurrentBookCover(""); setBookResume(""); setBookLink("");
+    setBookTitle(""); setBookAuthor(""); setBookMonth(""); setBookCity("Perpignan"); setBookImage(null); setCurrentBookCover(""); setBookResume(""); setBookLink(""); setBookArchived(false); setBookRating(""); setBookReview("");
   };
 
   const resetProdForm = () => {
@@ -127,7 +130,7 @@ export default function AdminPage() {
         body: JSON.stringify({
           type: "lectures",
           id: editingId,
-          data: { title: bookTitle, author: bookAuthor, month: bookMonth, city: bookCity, coverUrl: imageUrl, resume: bookResume, lien_place_des_libraires: bookLink }
+          data: { title: bookTitle, author: bookAuthor, month: bookMonth, city: bookCity, coverUrl: imageUrl, resume: bookResume, lien_place_des_libraires: bookLink, archived: bookArchived, rating: bookRating ? Number(bookRating) : null, review: bookReview || null }
         })
       });
 
@@ -228,6 +231,7 @@ export default function AdminPage() {
     setCurrentBookCover(book.coverUrl || "");
     setBookResume(book.resume || "");
     setBookLink(book.lien_place_des_libraires || "");
+    setBookArchived(Boolean(book.archived)); setBookRating(book.rating?.toString() || ""); setBookReview(book.review || "");
     window.scrollTo({ top: 300, behavior: "smooth" });
   };
 
@@ -331,6 +335,8 @@ export default function AdminPage() {
             </div>
             <textarea placeholder="Résumé du livre..." className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 transition-all shadow-sm min-h-[120px] font-medium text-sm resize-none" value={bookResume} onChange={e => setBookResume(e.target.value)} />
             <input placeholder="Lien Place des Libraires (ex: https://...)" type="url" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 transition-all shadow-sm font-medium text-sm" value={bookLink} onChange={e => setBookLink(e.target.value)} />
+            <label className="flex items-center gap-3 px-2 text-sm text-bb-ink/70"><input type="checkbox" checked={bookArchived} onChange={e => setBookArchived(e.target.checked)} /> Lecture archivée</label>
+            {bookArchived && <><input type="number" min="0" max="5" step="0.5" placeholder="Note du club sur 5" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige" value={bookRating} onChange={e => setBookRating(e.target.value)} /><textarea placeholder="Avis du club" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige min-h-[100px]" value={bookReview} onChange={e => setBookReview(e.target.value)} /></>}
             <div className="relative group">
               <input type="file" className="hidden" id="bookImg" onChange={e => setBookImage(e.target.files?.[0] || null)} />
               <label htmlFor="bookImg" className="w-full bg-white px-6 py-16 rounded-[2.5rem] border-2 border-dashed border-bb-beige flex flex-col items-center justify-center cursor-pointer group-hover:border-bb-rose/20 transition-all hover:bg-bb-beige/10">
