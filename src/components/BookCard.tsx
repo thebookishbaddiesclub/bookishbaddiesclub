@@ -16,9 +16,10 @@ interface BookCardProps {
   delay?: number;
   resume?: string;
   lien_place_des_libraires?: string;
+  rating?: number | null;
 }
 
-export default function BookCard({ title, author, coverUrl, month, className, delay = 0, resume, lien_place_des_libraires }: BookCardProps) {
+export default function BookCard({ title, author, coverUrl, month, className, delay = 0, resume, lien_place_des_libraires, rating }: BookCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Prevent scrolling when modal is open
@@ -67,6 +68,7 @@ export default function BookCard({ title, author, coverUrl, month, className, de
       <div className="mt-4 px-1">
         <h3 className="font-serif text-lg leading-tight group-hover:text-bb-rose transition-colors duration-300 line-clamp-1">{title}</h3>
         <p className="text-[10px] text-bb-ink/60 mt-1 font-bold uppercase tracking-widest">{author}</p>
+        {rating != null && <p className="mt-2 text-lg leading-none tracking-[0.12em] text-bb-gold" aria-label={`Note ${rating} sur 5`}>{"★".repeat(Math.round(rating))}{"☆".repeat(5 - Math.round(rating))}</p>}
       </div>
     </FadeIn>
 
