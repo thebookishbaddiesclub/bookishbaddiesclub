@@ -12,7 +12,7 @@ export default async function LecturesPage() {
   try {
     const [{ data }, { data: archived }] = await Promise.all([
       supabase.from("books").select("*").order("created_at", { ascending: false }),
-      supabase.from("reading_history").select("*").order("created_at", { ascending: true }),
+      supabase.from("reading_history").select("*").order("created_at", { ascending: false }),
     ]);
     books = data || [];
     history = archived || [];
