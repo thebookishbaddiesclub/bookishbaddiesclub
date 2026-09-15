@@ -1,44 +1,44 @@
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
-import { headers } from "next/headers";
-import { createClient } from "@supabase/supabase-js";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-12-18.acacia" as any,
-});
-
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-function getAdminSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || "";
-  return createClient(url, key);
-}
+import type Stripe from "stripe";
+import { getStockDatabase, getStripe } from "@/lib/server/clients";
 
 export async function POST(request: Request) {
-  const body = await request.text();
-  const sig = (await headers()).get("stripe-signature") as string;
-
-  let event;
-
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
+  const signature = request.headers.get("stripe-signature");
+  if (!signature) return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+  let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, endpointSecret!);
-  } catch (err: any) {
-    console.error(`Webhook Error: ${err.message}`);
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+    event = getStripe().webhooks.constructEvent(await request.text(), signature, secret);
+  } catch {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
-
-  // Handle the event
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session;
-    
-    // Here logic to handle successful payment
-    // 1. Reduire le stock dans Supabase (optionnel - nécessite de passer les IDs produits dans les metadata)
-    // 2. Envoyer un email
-    // 3. Enregistrer la commande
-    
-    console.log("Payment successful for session:", session.id);
+  if (!["checkout.session.completed", "checkout.session.async_payment_succeeded", "checkout.session.expired"].includes(event.type)) {
+    return NextResponse.json({ received: true });
   }
-
-  return NextResponse.json({ received: true });
+  const session = event.data.object as Stripe.Checkout.Session;
+  // Existing Stripe sessions / other integrations have no reliable stock mapping.
+  if (session.metadata?.stock_flow !== "v1" || session.mode !== "payment") {
+    return NextResponse.json({ received: true });
+  }
+  try {
+    const database = getStockDatabase();
+    if (event.type === "checkout.session.expired") {
+      if (session.status === "expired" && session.payment_status !== "paid") {
+        const { error } = await database.rpc("expire_stock", { p_session_id: session.id });
+        if (error) throw error;
+      }
+    } else if (session.payment_status === "paid") {
+      const { error } = await database.rpc("settle_stock", {
+        p_session_id: session.id, p_event_id: event.id,
+        p_amount_total: session.amount_total, p_currency: session.currency,
+      });
+      if (error) throw error;
+    }
+    return NextResponse.json({ received: true });
+  } catch {
+    console.error("Stock webhook requires retry", event.id, session.id);
+    // Do not acknowledge an uncommitted stock update: Stripe must retry it.
+    return NextResponse.json({ error: "Stock update failed" }, { status: 500 });
+  }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { availableStock } from "@/lib/stock";
 import FadeIn from "@/components/FadeIn";
 import Image from "next/image";
 import { ShoppingBag, Plus, Minus, Trash2, Info, Loader2 } from "lucide-react";
@@ -23,6 +24,8 @@ export default function MerchPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([]);
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [shopError, setShopError] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
@@ -37,23 +40,30 @@ export default function MerchPage() {
 
     const fetchProducts = async () => {
       try {
-        const res = await fetch("/api/admin", { cache: "no-store" });
+        const res = await fetch("/api/products", { cache: "no-store" });
         const data = await res.json();
-        if (data.merch && data.merch.products) {
-          setProducts(data.merch.products);
-        }
+        if (!res.ok) throw new Error(data.error);
+        setProducts(data.products);
+        setCart(previous => previous.map(item => ({ ...item, product: data.products.find((p: Product) => p.id === item.product.id) ?? item.product })));
+        setSelectedProduct(previous => previous ? data.products.find((p: Product) => p.id === previous.id) ?? null : null);
+        setShopError("");
       } catch (err) {
-        console.error("Failed to fetch products:", err);
+        setShopError("La boutique est momentanément indisponible. Recharge la page pour réessayer.");
       } finally {
         setLoading(false);
       }
     };
     fetchProducts();
+    const refresh = () => { void fetchProducts(); };
+    window.addEventListener("focus", refresh);
+    const interval = window.setInterval(refresh, 30000);
+    return () => { window.removeEventListener("focus", refresh); window.clearInterval(interval); };
   }, []);
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
+      if ((existing?.quantity ?? 0) >= availableStock(product)) return prev;
       if (existing) {
         return prev.map((item) =>
           item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
@@ -67,7 +77,8 @@ export default function MerchPage() {
     setCart((prev) =>
       prev.map((item) => {
         if (item.product.id === id) {
-          const newQuantity = Math.max(0, item.quantity + delta);
+          const product = products.find(p => p.id === id);
+          const newQuantity = Math.max(0, Math.min(availableStock(product ?? {}), item.quantity + delta));
           return { ...item, quantity: newQuantity };
         }
         return item;
@@ -76,12 +87,13 @@ export default function MerchPage() {
   };
 
   const handleCheckout = async () => {
-    setLoading(true);
+    if (checkingOut) return;
+    setCheckingOut(true);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart }),
+        body: JSON.stringify({ cart: cart.map(item => ({ id: item.product.id, quantity: item.quantity })) }),
       });
       const data = await res.json();
       if (data.url) {
@@ -92,7 +104,7 @@ export default function MerchPage() {
     } catch (err) {
       alert("Une erreur est survenue lors de la redirection vers Stripe.");
     } finally {
-      setLoading(false);
+      setCheckingOut(false);
     }
   };
 
@@ -108,6 +120,7 @@ export default function MerchPage() {
           </p>
         </FadeIn>
 
+        {shopError && <p role="alert" className="mb-6 text-red-600">{shopError}</p>}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-bb-ink/30 translate-y-10">
             <Loader2 className="w-8 h-8 animate-spin mb-4" />
@@ -152,7 +165,7 @@ export default function MerchPage() {
                       <p className="text-bb-rose font-bold uppercase tracking-widest text-xs">{product.price} €</p>
                     </div>
                     <div className="mt-2">
-                       {product.stock !== undefined && product.stock <= 0 ? (
+                       {availableStock(product) === 0 ? (
                          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-500 bg-red-50 px-3 py-1 rounded-full border border-red-100">En rupture de stock</span>
                        ) : product.stock !== undefined && product.stock <= 5 ? (
                          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-orange-500 bg-orange-50 px-3 py-1 rounded-full border border-orange-100">Plus que {product.stock} exemplaires !</span>
@@ -165,10 +178,10 @@ export default function MerchPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => addToCart(product)}
-                      disabled={product.stock !== undefined && product.stock <= 0}
+                      disabled={availableStock(product) <= (cart.find(item => item.product.id === product.id)?.quantity ?? 0)}
                       className="flex-1 py-3 px-4 bg-bb-ink text-bb-cream rounded-full font-bold text-xs uppercase tracking-widest transition-all hover:bg-bb-rose hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-30 disabled:hover:bg-bb-ink"
                     >
-                      <Plus className="w-4 h-4" /> {product.stock !== undefined && product.stock <= 0 ? "Indisponible" : "Ajouter"}
+                      <Plus className="w-4 h-4" /> {availableStock(product) === 0 ? "Indisponible" : "Ajouter"}
                     </button>
                     <button
                       onClick={() => setSelectedProduct(product)}
@@ -210,7 +223,7 @@ export default function MerchPage() {
                         {item.quantity === 1 ? <Trash2 className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
                       </button>
                       <span className="text-xs font-black min-w-[20px] text-center">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.product.id, 1)} className="p-1 hover:text-bb-rose transition-colors">
+                      <button disabled={item.quantity >= availableStock(products.find(p => p.id === item.product.id) ?? {})} onClick={() => updateQuantity(item.product.id, 1)} className="p-1 hover:text-bb-rose transition-colors">
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -219,16 +232,17 @@ export default function MerchPage() {
               </div>
 
               <div className="pt-6 border-t border-bb-beige">
+                {cart.some(item => item.quantity > availableStock(products.find(p => p.id === item.product.id) ?? {})) && <p role="alert" className="mb-4 text-sm text-red-600">Le stock a changé. Réduis les quantités ou retire les produits indisponibles.</p>}
                 <div className="flex justify-between items-center mb-10 px-2">
                   <span className="text-bb-ink/50 font-sans uppercase tracking-[.2em] text-[10px] font-black">Estimation Total</span>
                   <span className="text-3xl font-serif font-medium text-bb-ink">{cartTotal} €</span>
                 </div>
                 <button 
                   onClick={handleCheckout}
-                  disabled={loading}
+                  disabled={checkingOut || loading || !!shopError || cart.some(item => item.quantity > availableStock(products.find(p => p.id === item.product.id) ?? {}))}
                   className="w-full py-5 bg-bb-ink text-bb-cream rounded-full hover:bg-bb-rose transition-all font-bold text-xs uppercase tracking-[.3em] flex justify-center items-center gap-3 shadow-lg hover:shadow-bb-rose/20 text-center disabled:opacity-50"
                 >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Procéder au Paiement"}
+                  {checkingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : "Procéder au Paiement"}
                 </button>
                 <div className="mt-4 flex items-center justify-center gap-2 opacity-30">
                   <span className="h-[1px] w-4 bg-bb-ink"></span>
@@ -243,7 +257,8 @@ export default function MerchPage() {
 
       {/* Product Detail Modal */}
       <ProductModal 
-        product={selectedProduct} 
+        product={selectedProduct}
+        quantityInCart={cart.find(item => item.product.id === selectedProduct?.id)?.quantity ?? 0}
         onClose={() => setSelectedProduct(null)} 
         onAddToCart={(p) => {
           addToCart(p);
