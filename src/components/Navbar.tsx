@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ShoppingBag, Calendar, BookOpen, Home, Instagram, Menu, X } from "lucide-react";
+import { ShoppingBag, Calendar, BookOpen, Home, Instagram, Menu, X, History } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Icônes réseaux sociaux (non disponibles dans lucide)
@@ -38,6 +38,8 @@ export default function Navbar() {
     { href: "/", label: "Accueil", icon: Home },
     { href: "/agenda", label: "Agenda", icon: Calendar },
     { href: "/lectures", label: "Lectures", icon: BookOpen },
+    { href: "/historique", label: "Historique", icon: History },
+    { href: "/evenements", label: "Événements", icon: Calendar },
     { href: "/merch", label: "Merch", icon: ShoppingBag },
   ];
 
