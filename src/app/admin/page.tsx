@@ -33,6 +33,7 @@ export default function AdminPage() {
   // Form states for Merch
   const [prodName, setProdName] = useState("");
   const [prodPrice, setProdPrice] = useState("");
+  const [prodStripePriceId, setProdStripePriceId] = useState("");
   const [prodStock, setProdStock] = useState("");
   const [prodDesc, setProdDesc] = useState("");
   const [prodColors, setProdColors] = useState("");
@@ -65,7 +66,7 @@ export default function AdminPage() {
 
   const resetProdForm = () => {
     setEditingId(null);
-    setProdName(""); setProdPrice(""); setProdDesc(""); setProdColors(""); setProdSizes(""); setProdStock(""); setProdImage(null); setCurrentProdImage("");
+    setProdName(""); setProdPrice(""); setProdStripePriceId(""); setProdDesc(""); setProdColors(""); setProdSizes(""); setProdStock(""); setProdImage(null); setCurrentProdImage("");
   };
 
   const handleAddOrEditBook = async (e: React.FormEvent) => {
@@ -145,6 +146,7 @@ export default function AdminPage() {
           data: { 
             name: prodName, 
             price: parseFloat(prodPrice), 
+            stripe_price_id: prodStripePriceId.trim() || null,
             stock: parseInt(prodStock) || 0,
             description: prodDesc, 
             colors: prodColors.split(",").map(c => c.trim()).filter(c => c !== ""), 
@@ -203,6 +205,7 @@ export default function AdminPage() {
     setEditingId(prod.id);
     setProdName(prod.name);
     setProdPrice(prod.price.toString());
+    setProdStripePriceId(prod.stripe_price_id || "");
     setProdStock(prod.stock?.toString() || "0");
     setProdDesc(prod.description);
     setProdColors((prod.colors || []).join(", "));
@@ -326,6 +329,7 @@ export default function AdminPage() {
               <input type="number" placeholder="Prix (€)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodPrice} onChange={e => setProdPrice(e.target.value)} required />
               <input type="number" placeholder="Stock (quantité)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodStock} onChange={e => setProdStock(e.target.value)} required />
             </div>
+            <input placeholder="Stripe Price ID (ex: price_...)" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodStripePriceId} onChange={e => setProdStripePriceId(e.target.value)} />
             <textarea placeholder="Description" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm min-h-[120px] font-medium text-sm resize-none" value={prodDesc} onChange={e => setProdDesc(e.target.value)} required />
             <div className="grid grid-cols-2 gap-4">
               <input placeholder="Couleurs (ex: Rose, Blanc)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodColors} onChange={e => setProdColors(e.target.value)} />
