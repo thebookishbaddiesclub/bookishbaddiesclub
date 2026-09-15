@@ -40,12 +40,29 @@ export default function AdminPage() {
   const [prodSizes, setProdSizes] = useState("");
   const [prodImage, setProdImage] = useState<File | null>(null);
   const [currentProdImage, setCurrentProdImage] = useState("");
+  const [promos, setPromos] = useState<any[]>([]);
+  const [promoForm, setPromoForm] = useState({ code: "", type: "percent", value: "" });
 
   const fetchData = async () => {
     const res = await fetch("/api/admin", { credentials: "include" });
     const data = await res.json();
     if (data.lectures) setBooks(data.lectures.books || []);
     if (data.merch) setProducts(data.merch.products || []);
+    const promoRes = await fetch("/api/admin/promos", { credentials: "include" });
+    if (promoRes.ok) setPromos((await promoRes.json()).promos || []);
+  };
+
+  const createPromo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = await fetch("/api/admin/promos", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(promoForm) });
+    const data = await res.json();
+    if (!res.ok) return setMessage(data.error || "Code promo impossible à créer.");
+    setPromoForm({ code: "", type: "percent", value: "" }); setMessage("Code promo créé !"); fetchData();
+  };
+
+  const disablePromo = async (id: string) => {
+    await fetch("/api/admin/promos", { method: "PATCH", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    fetchData();
   };
 
   useEffect(() => {
@@ -348,6 +365,17 @@ export default function AdminPage() {
           </form>
         </FadeIn>
       </div>
+
+      <FadeIn delay={0.35} className="bg-white/40 backdrop-blur-sm p-10 rounded-[3rem] border border-bb-beige shadow-sm space-y-6">
+        <h2 className="text-2xl font-serif italic text-bb-ink">Codes promo</h2>
+        <form onSubmit={createPromo} className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <input placeholder="CODE10" value={promoForm.code} onChange={e => setPromoForm({ ...promoForm, code: e.target.value.toUpperCase() })} className="rounded-full border border-bb-beige bg-white px-5 py-3 text-sm" required />
+          <select value={promoForm.type} onChange={e => setPromoForm({ ...promoForm, type: e.target.value })} className="rounded-full border border-bb-beige bg-white px-5 py-3 text-sm"><option value="percent">Pourcentage</option><option value="amount">Montant (€)</option></select>
+          <input type="number" min="0.01" step="0.01" placeholder="Valeur" value={promoForm.value} onChange={e => setPromoForm({ ...promoForm, value: e.target.value })} className="rounded-full border border-bb-beige bg-white px-5 py-3 text-sm" required />
+          <button className="rounded-full bg-bb-ink px-5 py-3 text-[10px] font-black uppercase tracking-widest text-bb-cream">Créer</button>
+        </form>
+        <div className="space-y-2">{promos.map(p => <div key={p.id} className="flex items-center justify-between rounded-2xl bg-white/60 px-5 py-3 text-sm"><span className="font-bold">{p.code}</span><button onClick={() => disablePromo(p.id)} className="text-xs text-red-500">Désactiver</button></div>)}</div>
+      </FadeIn>
 
       {/* Liste Contenu Actuel */}
       <FadeIn delay={0.4} className="space-y-12 pb-20">
