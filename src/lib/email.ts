@@ -13,3 +13,10 @@ export async function sendOrderEmails(order: OrderEmail) {
   ].filter(Boolean);
   await Promise.all(messages.map(message => fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(message) })));
 }
+
+export async function sendOrderStatusEmail(email: string | null, name: string | null, status: string, note?: string | null) {
+  const key = process.env.RESEND_API_KEY; if (!key || !email) return;
+  const from = process.env.EMAIL_FROM || "Bookish Baddies Club <onboarding@resend.dev>";
+  const labels: Record<string, string> = { received: "commande reçue", ready_for_pickup: "prête à être remise en main propre", handed_over: "remise en main propre effectuée", cancelled: "annulée" };
+  await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify({ from, to: [email], subject: "Mise à jour de ta commande", html: `<p>Bonjour ${name || ""},</p><p>Ta commande est maintenant <strong>${labels[status] || status}</strong>.</p>${note ? `<p>${note}</p>` : ""}<p>Bookish Baddies Club</p>` }) });
+}
