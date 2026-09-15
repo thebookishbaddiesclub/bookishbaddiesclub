@@ -24,6 +24,9 @@ export async function POST(request: Request) {
   }
   try {
     const database = getStockDatabase();
+    if (session.customer_details?.email) {
+      await database.rpc("update_order_contact", { p_session_id: session.id, p_email: session.customer_details.email, p_name: session.customer_details.name || "" });
+    }
     if (event.type === "checkout.session.expired") {
       if (session.status === "expired" && session.payment_status !== "paid") {
         const { error } = await database.rpc("expire_stock", { p_session_id: session.id });
