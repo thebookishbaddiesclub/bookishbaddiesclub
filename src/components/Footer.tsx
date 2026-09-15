@@ -19,7 +19,6 @@ export default function Footer() {
             <h4 className="text-[10px] uppercase tracking-[.4em] font-black text-bb-ink/40">Découvrir</h4>
             <ul className="flex flex-col gap-4">
               <li><Link href="/" className="text-sm font-medium text-bb-ink/70 hover:text-bb-rose transition-colors">Accueil</Link></li>
-              <li><Link href="/agenda" className="text-sm font-medium text-bb-ink/70 hover:text-bb-rose transition-colors">Agenda</Link></li>
               <li><Link href="/lectures" className="text-sm font-medium text-bb-ink/70 hover:text-bb-rose transition-colors">Lectures</Link></li>
               <li><Link href="/merch" className="text-sm font-medium text-bb-ink/70 hover:text-bb-rose transition-colors">Merch</Link></li>
             </ul>
