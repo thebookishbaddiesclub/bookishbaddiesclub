@@ -27,6 +27,11 @@ export default function MerchPage() {
   const [checkingOut, setCheckingOut] = useState(false);
   const [shopError, setShopError] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [promotionCodeId, setPromotionCodeId] = useState<string | null>(null);
+  const [promoDiscount, setPromoDiscount] = useState<{ percentOff?: number | null; amountOff?: number | null } | null>(null);
+  const [promoMessage, setPromoMessage] = useState("");
+  const [checkingPromo, setCheckingPromo] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -93,7 +98,7 @@ export default function MerchPage() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart: cart.map(item => ({ id: item.product.id, quantity: item.quantity })) }),
+        body: JSON.stringify({ cart: cart.map(item => ({ id: item.product.id, quantity: item.quantity })), promotionCodeId }),
       });
       const data = await res.json();
       if (data.url) {
@@ -109,6 +114,19 @@ export default function MerchPage() {
   };
 
   const cartTotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const discount = promoDiscount?.percentOff ? cartTotal * promoDiscount.percentOff / 100 : promoDiscount?.amountOff ? promoDiscount.amountOff / 100 : 0;
+  const discountedTotal = Math.max(0, cartTotal - discount);
+
+  const applyPromo = async () => {
+    setCheckingPromo(true); setPromoMessage(""); setPromotionCodeId(null); setPromoDiscount(null);
+    try {
+      const res = await fetch("/api/promo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: promoCode }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Code invalide");
+      setPromotionCodeId(data.promotionCodeId); setPromoDiscount(data); setPromoMessage(`Code ${data.code} appliqué.`);
+    } catch (error: any) { setPromoMessage(error.message); }
+    finally { setCheckingPromo(false); }
+  };
 
   return (
     <div className="py-10 grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -232,10 +250,15 @@ export default function MerchPage() {
               </div>
 
               <div className="pt-6 border-t border-bb-beige">
+                <div className="mb-6 flex gap-2">
+                  <input value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())} placeholder="Code promo" className="min-w-0 flex-1 rounded-full border border-bb-beige bg-white px-4 py-3 text-xs uppercase tracking-wider" />
+                  <button type="button" onClick={applyPromo} disabled={!promoCode || checkingPromo} className="rounded-full border border-bb-ink px-4 py-3 text-[10px] font-bold uppercase tracking-wider disabled:opacity-40">{checkingPromo ? "..." : "Valider"}</button>
+                </div>
+                {promoMessage && <p className="mb-4 text-xs text-bb-rose">{promoMessage}</p>}
                 {cart.some(item => item.quantity > availableStock(products.find(p => p.id === item.product.id) ?? {})) && <p role="alert" className="mb-4 text-sm text-red-600">Le stock a changé. Réduis les quantités ou retire les produits indisponibles.</p>}
                 <div className="flex justify-between items-center mb-10 px-2">
                   <span className="text-bb-ink/50 font-sans uppercase tracking-[.2em] text-[10px] font-black">Estimation Total</span>
-                  <span className="text-3xl font-serif font-medium text-bb-ink">{cartTotal} €</span>
+                  <span className="text-3xl font-serif font-medium text-bb-ink">{discountedTotal.toFixed(2)} €</span>
                 </div>
                 <button 
                   onClick={handleCheckout}
