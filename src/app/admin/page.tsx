@@ -139,7 +139,8 @@ export default function AdminPage() {
         resetBookForm();
         fetchData();
       } else {
-        setMessage("Erreur lors de la sauvegarde.");
+        const result = await res.json().catch(() => ({}));
+        setMessage(result.error || "Erreur lors de la sauvegarde.");
       }
     } catch (err: any) {
       console.error("Erreur upload livre:", err);
