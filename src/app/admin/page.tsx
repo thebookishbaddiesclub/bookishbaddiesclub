@@ -259,6 +259,7 @@ export default function AdminPage() {
             <span className="text-[10px] uppercase font-black tracking-[.4em]">Administration</span>
           </div>
           <h1 className="text-5xl font-serif text-bb-ink italic">Tableau de Bord</h1>
+          <a href="/admin/commandes" className="mt-3 inline-block text-sm font-bold text-bb-rose">Voir les commandes et précommandes →</a>
         </div>
         
         <div className="flex items-center gap-4">
