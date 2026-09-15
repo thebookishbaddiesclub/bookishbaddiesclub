@@ -36,7 +36,6 @@ export default function Navbar() {
 
   const navLinks = [
     { href: "/", label: "Accueil", icon: Home },
-    { href: "/agenda", label: "Agenda", icon: Calendar },
     { href: "/lectures", label: "Lectures", icon: BookOpen },
     { href: "/evenements", label: "Événements", icon: Calendar },
     { href: "/merch", label: "Merch", icon: ShoppingBag },
