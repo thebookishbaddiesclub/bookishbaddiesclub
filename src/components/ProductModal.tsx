@@ -8,6 +8,8 @@ import { availableStock } from "@/lib/stock";
 
 interface Product {
   stock?: number;
+  coming_soon?: boolean;
+  images?: string[];
   id: string;
   name: string;
   price: number;
@@ -27,10 +29,12 @@ interface ProductModalProps {
 export default function ProductModal({ product, quantityInCart, onClose, onAddToCart }: ProductModalProps) {
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [photoIndex, setPhotoIndex] = useState(0);
   const [added, setAdded] = useState(false);
 
   if (!product) return null;
 
+  const photos = [product.imageUrl, ...(product.images || [])].filter(Boolean);
   const handleAdd = () => {
     if (quantityInCart >= availableStock(product)) return;
     onAddToCart(product, { color: selectedColor, size: selectedSize });
@@ -67,8 +71,8 @@ export default function ProductModal({ product, quantityInCart, onClose, onAddTo
 
           {/* Image */}
           <div className="w-full md:w-1/2 aspect-square md:aspect-auto bg-bb-beige/30 relative">
-            {product.imageUrl ? (
-              <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+            {photos.length ? (
+              <Image src={photos[photoIndex] || photos[0]} alt={product.name} fill className="object-cover" />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-bb-ink/20 uppercase tracking-widest font-serif">
                 Photo indisponible
@@ -78,6 +82,7 @@ export default function ProductModal({ product, quantityInCart, onClose, onAddTo
 
           {/* Details */}
           <div className="w-full md:w-1/2 p-10 overflow-y-auto space-y-8">
+            {photos.length > 1 && <div className="flex gap-2 flex-wrap" aria-label="Photos du produit">{photos.map((url, i) => <button type="button" key={`${url}-${i}`} aria-label={`Voir la photo ${i + 1}`} aria-pressed={photoIndex === i} onClick={() => setPhotoIndex(i)} className={`relative h-16 w-16 rounded-lg overflow-hidden border-2 ${photoIndex === i ? "border-bb-rose" : "border-transparent"}`}><Image src={url} alt="" fill className="object-cover" /></button>)}</div>}
             <header>
               <h2 className="text-3xl font-serif text-bb-ink leading-tight">{product.name}</h2>
               <p className="text-xl font-sans text-bb-rose mt-2">{product.price} €</p>
@@ -132,7 +137,7 @@ export default function ProductModal({ product, quantityInCart, onClose, onAddTo
               {added ? (
                 <><Check className="w-5 h-5" /> Ajouté !</>
               ) : (
-                <><ShoppingBag className="w-5 h-5" /> {availableStock(product) === 0 ? "Indisponible" : quantityInCart >= availableStock(product) ? "Quantité maximale atteinte" : "Ajouter au panier"}</>
+                <><ShoppingBag className="w-5 h-5" /> {product.coming_soon ? "Bientôt disponible" : availableStock(product) === 0 ? "Indisponible" : quantityInCart >= availableStock(product) ? "Quantité maximale atteinte" : "Ajouter au panier"}</>
               )}
             </button>
           </div>

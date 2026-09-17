@@ -5,6 +5,7 @@ export interface CatalogProduct {
   price: number;
   stock: number;
   imageUrl?: string;
+  coming_soon?: boolean;
 }
 export class CartError extends Error {}
 
@@ -29,7 +30,7 @@ export function parseCart(value: unknown): CartItem[] {
 export function priceCart(cart: CartItem[], products: CatalogProduct[]) {
   return cart.map(({ id, quantity }) => {
     const product = products.find(p => String(p.id) === id);
-    if (!product || !Number.isSafeInteger(product.stock) || product.stock < quantity) {
+    if (!product || product.coming_soon || !Number.isSafeInteger(product.stock) || product.stock < quantity) {
       throw new CartError("Le stock a changé. Actualise ton panier.");
     }
     const unit_amount = Math.round(Number(product.price) * 100);
@@ -38,6 +39,6 @@ export function priceCart(cart: CartItem[], products: CatalogProduct[]) {
   });
 }
 
-export function availableStock(product: { stock?: number | null }) {
-  return Number.isSafeInteger(product.stock) && (product.stock ?? 0) > 0 ? product.stock! : 0;
+export function availableStock(product: { stock?: number | null; coming_soon?: boolean }) {
+  return !product.coming_soon && Number.isSafeInteger(product.stock) && (product.stock ?? 0) > 0 ? product.stock! : 0;
 }

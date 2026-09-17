@@ -42,6 +42,9 @@ export default function AdminPage() {
   const [prodColors, setProdColors] = useState("");
   const [prodSizes, setProdSizes] = useState("");
   const [prodImage, setProdImage] = useState<File | null>(null);
+  const [extraPhotos, setExtraPhotos] = useState<string[]>([]);
+  const [newPhotos, setNewPhotos] = useState<File[]>([]);
+  const [comingSoon, setComingSoon] = useState(false);
   const [currentProdImage, setCurrentProdImage] = useState("");
   const [promos, setPromos] = useState<any[]>([]);
   const [promoForm, setPromoForm] = useState({ code: "", type: "percent", value: "" });
@@ -99,6 +102,7 @@ export default function AdminPage() {
   };
 
   const resetProdForm = () => {
+    setExtraPhotos([]); setNewPhotos([]); setComingSoon(false);
     setEditingId(null);
     setProdName(""); setProdPrice(""); setProdStripePriceId(""); setProdDesc(""); setProdColors(""); setProdSizes(""); setProdStock(""); setProdImage(null); setCurrentProdImage("");
   };
@@ -169,6 +173,14 @@ export default function AdminPage() {
         imageUrl = uploadData.url;
       }
 
+      const images = [...extraPhotos];
+      for (const file of newPhotos) {
+        const formData = new FormData(); formData.append("file", file);
+        const response = await fetch("/api/upload", { method: "POST", body: formData });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Photo non enregistrée");
+        images.push(result.url);
+      }
       const method = editingId ? "PUT" : "POST";
       const res = await fetch("/api/admin", {
         method: method,
@@ -186,6 +198,7 @@ export default function AdminPage() {
             description: prodDesc, 
             colors: prodColors.split(",").map(c => c.trim()).filter(c => c !== ""), 
             sizes: prodSizes.split(",").map(s => s.trim()).filter(s => s !== ""),
+            images, coming_soon: comingSoon,
             imageUrl: imageUrl 
           }
         })
@@ -237,6 +250,7 @@ export default function AdminPage() {
   };
 
   const startEditProduct = (prod: any) => {
+    setProdImage(null); setExtraPhotos(prod.images || []); setNewPhotos([]); setComingSoon(Boolean(prod.coming_soon));
     setOriginalStock(prod.stock);
     setEditingId(prod.id);
     setProdName(prod.name);
@@ -364,6 +378,10 @@ export default function AdminPage() {
           </div>
 
           <form onSubmit={handleAddOrEditProduct} className="space-y-4">
+            <label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={comingSoon} onChange={e => setComingSoon(e.target.checked)} /> Bientôt disponible (visible, achat désactivé)</label>
+            <label className="block text-sm">Photos supplémentaires<input type="file" accept="image/*" multiple onChange={e => setNewPhotos(Array.from(e.target.files || []))} className="block w-full mt-2" /></label>
+            {extraPhotos.map((url, index) => <div key={url} className="flex items-center gap-3"><img src={url} alt={`Photo ${index + 2}`} className="h-16 w-16 object-cover rounded-lg" /><button type="button" onClick={() => setExtraPhotos(extraPhotos.filter((_, i) => i !== index))}>Retirer</button></div>)}
+
             <input placeholder="Nom du produit" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodName} onChange={e => setProdName(e.target.value)} required />
             <div className="grid grid-cols-2 gap-4">
               <input type="number" placeholder="Prix (€)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodPrice} onChange={e => setProdPrice(e.target.value)} required />

@@ -16,6 +16,8 @@ interface Product {
   sizes: string[];
   imageUrl: string;
   stock?: number;
+  coming_soon?: boolean;
+  images?: string[];
 }
 
 export const dynamic = "force-dynamic";
@@ -183,7 +185,7 @@ export default function MerchPage() {
                       <p className="text-bb-rose font-bold uppercase tracking-widest text-xs">{product.price} €</p>
                     </div>
                     <div className="mt-2">
-                       {availableStock(product) === 0 ? (
+                       {product.coming_soon ? (<span className="text-sm font-bold text-bb-rose">Bientôt disponible</span>) : availableStock(product) === 0 ? (
                          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-500 bg-red-50 px-3 py-1 rounded-full border border-red-100">En rupture de stock</span>
                        ) : product.stock !== undefined && product.stock <= 5 ? (
                          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-orange-500 bg-orange-50 px-3 py-1 rounded-full border border-orange-100">Plus que {product.stock} exemplaires !</span>
@@ -199,7 +201,7 @@ export default function MerchPage() {
                       disabled={availableStock(product) <= (cart.find(item => item.product.id === product.id)?.quantity ?? 0)}
                       className="flex-1 py-3 px-4 bg-bb-ink text-bb-cream rounded-full font-bold text-xs uppercase tracking-widest transition-all hover:bg-bb-rose hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-30 disabled:hover:bg-bb-ink"
                     >
-                      <Plus className="w-4 h-4" /> {availableStock(product) === 0 ? "Indisponible" : "Ajouter"}
+                      <Plus className="w-4 h-4" /> {product.coming_soon ? "Bientôt disponible" : availableStock(product) === 0 ? "Indisponible" : "Ajouter"}
                     </button>
                     <button
                       onClick={() => setSelectedProduct(product)}
@@ -279,7 +281,7 @@ export default function MerchPage() {
       </div>
 
       {/* Product Detail Modal */}
-      <ProductModal 
+      <ProductModal key={selectedProduct?.id || "closed"}
         product={selectedProduct}
         quantityInCart={cart.find(item => item.product.id === selectedProduct?.id)?.quantity ?? 0}
         onClose={() => setSelectedProduct(null)} 
