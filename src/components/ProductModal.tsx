@@ -34,9 +34,10 @@ export default function ProductModal({ product, quantityInCart, onClose, onAddTo
 
   if (!product) return null;
 
+  const missingOptions = (product.sizes.length > 0 && !product.sizes.includes(selectedSize)) || (product.colors.length > 0 && !product.colors.includes(selectedColor));
   const photos = [product.imageUrl, ...(product.images || [])].filter(Boolean);
   const handleAdd = () => {
-    if (quantityInCart >= availableStock(product)) return;
+    if (missingOptions || quantityInCart >= availableStock(product)) return;
     onAddToCart(product, { color: selectedColor, size: selectedSize });
     setAdded(true);
     setTimeout(() => {
@@ -131,13 +132,13 @@ export default function ProductModal({ product, quantityInCart, onClose, onAddTo
 
             <button 
               onClick={handleAdd}
-              disabled={added || quantityInCart >= availableStock(product)}
+              disabled={missingOptions || added || quantityInCart >= availableStock(product)}
               className={`w-full py-4 rounded-full font-bold flex items-center justify-center gap-2 transition-all ${added ? "bg-green-500 text-white" : "bg-bb-ink text-bb-cream hover:bg-bb-rose shadow-lg"}`}
             >
               {added ? (
                 <><Check className="w-5 h-5" /> Ajouté !</>
               ) : (
-                <><ShoppingBag className="w-5 h-5" /> {product.coming_soon ? "Bientôt disponible" : availableStock(product) === 0 ? "Indisponible" : quantityInCart >= availableStock(product) ? "Quantité maximale atteinte" : "Ajouter au panier"}</>
+                <><ShoppingBag className="w-5 h-5" /> {product.coming_soon ? "Bientôt disponible" : availableStock(product) === 0 ? "Indisponible" : quantityInCart >= availableStock(product) ? "Quantité maximale atteinte" : missingOptions ? "Choisis les options" : "Ajouter au panier"}</>
               )}
             </button>
           </div>

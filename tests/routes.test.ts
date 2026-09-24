@@ -10,6 +10,7 @@ const sessionPrototype = Object.getPrototypeOf(stripe.checkout.sessions);
 let calls: { name: string; body: Record<string, unknown> }[];
 let failingRpc: string | undefined;
 let reserveMessage: string;
+let catalog: any[];
 let sessionCalls: NonNullable<Parameters<Stripe["checkout"]["sessions"]["create"]>[0]>[];
 beforeEach(() => {
   process.env.STRIPE_SECRET_KEY = "sk_test_local_only";
@@ -17,6 +18,7 @@ beforeEach(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://database.example.test";
   process.env.SUPABASE_SERVICE_ROLE_KEY = "local-test-key";
   process.env.SITE_URL = "https://shop.example.test";
+  catalog = [{ id: "p1", name: "Real product", price: 12, stock: 3 }];
   calls = []; failingRpc = undefined; reserveMessage = "temporary database failure"; sessionCalls = [];
   mock.method(globalThis, "fetch", async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
@@ -24,7 +26,7 @@ beforeEach(() => {
     const name = url.pathname.split("/").pop()!;
     calls.push({ name, body: JSON.parse(String(init?.body ?? "{}")) });
     return new Response(JSON.stringify(name === failingRpc ? { message: reserveMessage, code: "P0001" }
-      : name === "stock_catalog" ? [{ id: "p1", name: "Real product", price: 12, stock: 3 }] : null),
+      : name === "stock_catalog" ? catalog : null),
       { status: name === failingRpc ? 500 : 200, headers: { "Content-Type": "application/json" } });
   });
   mock.method(sessionPrototype, "create", async (params: NonNullable<Parameters<Stripe["checkout"]["sessions"]["create"]>[0]>) => {
@@ -105,4 +107,24 @@ test("missing privileged database credentials fails closed", async () => {
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   assert.equal((await checkout(cartRequest([{ id: "p1", quantity: 1 }]))).status, 503);
   assert.equal(calls.length, 0);
+});
+
+test("contact update failure asks Stripe to retry instead of losing customer details", async () => {
+  failingRpc = "update_order_contact";
+  const result = await webhook(signedEvent("checkout.session.completed", { customer_details: { email: "buyer@example.test", name: "Test Buyer" } }));
+  assert.equal(result.status, 500);
+  assert.deepEqual(calls.map(c => c.name), ["update_order_contact"]);
+});
+
+test("checkout sends chosen sizes to Stripe and retains them in the stock order", async () => {
+  catalog[0].sizes = ["S", "M"];
+  const result = await checkout(cartRequest([{ id: "p1", quantity: 1, size: "S" }, { id: "p1", quantity: 1, size: "M" }]));
+  assert.equal(result.status, 200);
+  assert.equal(sessionCalls[0].line_items!.length, 2);
+  assert.equal(sessionCalls[0].line_items![0].price_data!.product_data!.metadata!.size, "S");
+  assert.match(sessionCalls[0].line_items![1].price_data!.product_data!.name, /Taille : M/);
+  const items = calls.find(c => c.name === "reserve_stock")!.body.p_items as any[];
+  assert.equal(items.length, 1);
+  assert.equal(items[0].quantity, 2);
+  assert.deepEqual(items[0].variants.map((v: any) => v.size), ["S", "M"]);
 });

@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic";
 export default function MerchPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([]);
+  const [cart, setCart] = useState<{ product: Product; quantity: number; size: string; color: string }[]>([]);
   const [checkingOut, setCheckingOut] = useState(false);
   const [shopError, setShopError] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -67,30 +67,25 @@ export default function MerchPage() {
     return () => { window.removeEventListener("focus", refresh); window.clearInterval(interval); };
   }, []);
 
-  const addToCart = (product: Product) => {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
-      if ((existing?.quantity ?? 0) >= availableStock(product)) return prev;
-      if (existing) {
-        return prev.map((item) =>
-          item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [...prev, { product, quantity: 1 }];
+  const quantityFor = (id: string) => cart.filter(item => item.product.id === id).reduce((sum, item) => sum + item.quantity, 0);
+  const addToCart = (product: Product, config?: { size: string; color: string }) => {
+    if (!config && ((product.sizes || []).length || (product.colors || []).length)) {
+      setSelectedProduct(product); return;
+    }
+    const { size = "", color = "" } = config || {};
+    setCart(prev => {
+      if (prev.filter(item => item.product.id === product.id).reduce((sum, item) => sum + item.quantity, 0) >= availableStock(product)) return prev;
+      const index = prev.findIndex(item => item.product.id === product.id && item.size === size && item.color === color);
+      return index < 0 ? [...prev, { product, size, color, quantity: 1 }] : prev.map((item, i) => i === index ? { ...item, quantity: item.quantity + 1 } : item);
     });
   };
-
-  const updateQuantity = (id: string, delta: number) => {
-    setCart((prev) =>
-      prev.map((item) => {
-        if (item.product.id === id) {
-          const product = products.find(p => p.id === id);
-          const newQuantity = Math.max(0, Math.min(availableStock(product ?? {}), item.quantity + delta));
-          return { ...item, quantity: newQuantity };
-        }
-        return item;
-      }).filter((item) => item.quantity > 0)
-    );
+  const updateQuantity = (index: number, delta: number) => {
+    setCart(prev => prev.map((item, i) => {
+      if (i !== index) return item;
+      const total = prev.filter(other => other.product.id === item.product.id).reduce((sum, other) => sum + other.quantity, 0);
+      if (delta > 0 && total >= availableStock(products.find(p => p.id === item.product.id) ?? {})) return item;
+      return { ...item, quantity: Math.max(0, item.quantity + delta) };
+    }).filter(item => item.quantity > 0));
   };
 
   const handleCheckout = async () => {
@@ -100,7 +95,7 @@ export default function MerchPage() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart: cart.map(item => ({ id: item.product.id, quantity: item.quantity })), promotionCodeId }),
+        body: JSON.stringify({ cart: cart.map(item => ({ id: item.product.id, quantity: item.quantity, size: item.size, color: item.color })), promotionCodeId }),
       });
       const data = await res.json();
       if (data.url) {
@@ -198,7 +193,7 @@ export default function MerchPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => addToCart(product)}
-                      disabled={availableStock(product) <= (cart.find(item => item.product.id === product.id)?.quantity ?? 0)}
+                      disabled={availableStock(product) <= quantityFor(product.id)}
                       className="flex-1 py-3 px-4 bg-bb-ink text-bb-cream rounded-full font-bold text-xs uppercase tracking-widest transition-all hover:bg-bb-rose hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-30 disabled:hover:bg-bb-ink"
                     >
                       <Plus className="w-4 h-4" /> {product.coming_soon ? "Bientôt disponible" : availableStock(product) === 0 ? "Indisponible" : "Ajouter"}
@@ -232,18 +227,18 @@ export default function MerchPage() {
           ) : (
             <div className="flex flex-col gap-6">
               <div className="max-h-[40vh] overflow-y-auto space-y-4 pr-2 custom-scrollbar">
-                {cart.map((item) => (
-                  <div key={item.product.id} className="flex items-center justify-between bg-white/50 p-4 rounded-2xl border border-bb-beige/30">
+                {cart.map((item, index) => (
+                  <div key={JSON.stringify([item.product.id, item.size, item.color])} className="flex items-center justify-between bg-white/50 p-4 rounded-2xl border border-bb-beige/30">
                     <div className="flex-1">
-                      <h4 className="text-sm font-bold text-bb-ink line-clamp-1">{item.product.name}</h4>
+                      <h4 className="text-sm font-bold text-bb-ink line-clamp-1">{item.product.name}</h4><p className="text-xs text-bb-ink/70">{[item.size && `Taille : ${item.size}`, item.color && `Couleur : ${item.color}`].filter(Boolean).join(" · ")}</p>
                       <p className="text-xs text-bb-rose font-medium tracking-wider">{item.product.price} €</p>
                     </div>
                     <div className="flex items-center gap-3 bg-bb-beige/20 p-2 rounded-xl">
-                      <button onClick={() => updateQuantity(item.product.id, -1)} className="p-1 hover:text-bb-rose transition-colors">
+                      <button onClick={() => updateQuantity(index, -1)} className="p-1 hover:text-bb-rose transition-colors">
                         {item.quantity === 1 ? <Trash2 className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
                       </button>
                       <span className="text-xs font-black min-w-[20px] text-center">{item.quantity}</span>
-                      <button disabled={item.quantity >= availableStock(products.find(p => p.id === item.product.id) ?? {})} onClick={() => updateQuantity(item.product.id, 1)} className="p-1 hover:text-bb-rose transition-colors">
+                      <button disabled={quantityFor(item.product.id) >= availableStock(products.find(p => p.id === item.product.id) ?? {})} onClick={() => updateQuantity(index, 1)} className="p-1 hover:text-bb-rose transition-colors">
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -257,14 +252,14 @@ export default function MerchPage() {
                   <button type="button" onClick={applyPromo} disabled={!promoCode || checkingPromo} className="rounded-full border border-bb-ink px-4 py-3 text-[10px] font-bold uppercase tracking-wider disabled:opacity-40">{checkingPromo ? "..." : "Valider"}</button>
                 </div>
                 {promoMessage && <p className="mb-4 text-xs text-bb-rose">{promoMessage}</p>}
-                {cart.some(item => item.quantity > availableStock(products.find(p => p.id === item.product.id) ?? {})) && <p role="alert" className="mb-4 text-sm text-red-600">Le stock a changé. Réduis les quantités ou retire les produits indisponibles.</p>}
+                {cart.some(item => quantityFor(item.product.id) > availableStock(products.find(p => p.id === item.product.id) ?? {})) && <p role="alert" className="mb-4 text-sm text-red-600">Le stock a changé. Réduis les quantités ou retire les produits indisponibles.</p>}
                 <div className="flex justify-between items-center mb-10 px-2">
                   <span className="text-bb-ink/50 font-sans uppercase tracking-[.2em] text-[10px] font-black">Estimation Total</span>
                   <span className="text-3xl font-serif font-medium text-bb-ink">{discountedTotal.toFixed(2)} €</span>
                 </div>
                 <button 
                   onClick={handleCheckout}
-                  disabled={checkingOut || loading || !!shopError || cart.some(item => item.quantity > availableStock(products.find(p => p.id === item.product.id) ?? {}))}
+                  disabled={checkingOut || loading || !!shopError || cart.some(item => quantityFor(item.product.id) > availableStock(products.find(p => p.id === item.product.id) ?? {}))}
                   className="w-full py-5 bg-bb-ink text-bb-cream rounded-full hover:bg-bb-rose transition-all font-bold text-xs uppercase tracking-[.3em] flex justify-center items-center gap-3 shadow-lg hover:shadow-bb-rose/20 text-center disabled:opacity-50"
                 >
                   {checkingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : "Procéder au Paiement"}
@@ -283,10 +278,10 @@ export default function MerchPage() {
       {/* Product Detail Modal */}
       <ProductModal key={selectedProduct?.id || "closed"}
         product={selectedProduct}
-        quantityInCart={cart.find(item => item.product.id === selectedProduct?.id)?.quantity ?? 0}
+        quantityInCart={quantityFor(selectedProduct?.id || "")}
         onClose={() => setSelectedProduct(null)} 
-        onAddToCart={(p) => {
-          addToCart(p);
+        onAddToCart={(p, config) => {
+          addToCart(p, config);
         }}
       />
     </div>

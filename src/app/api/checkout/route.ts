@@ -1,29 +1,29 @@
 import { NextResponse } from "next/server";
-import { CartError, parseCart, priceCart, type CatalogProduct } from "@/lib/stock";
+import { CartError, configuredCart, type CatalogProduct } from "@/lib/stock";
 import { getSiteOrigin, getStockDatabase, getStripe } from "@/lib/server/clients";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => { throw new CartError("Panier invalide."); });
-    const cart = parseCart(body?.cart);
+
     const promotionCodeId = typeof body?.promotionCodeId === "string" && /^promo_[A-Za-z0-9]+$/.test(body.promotionCodeId)
       ? body.promotionCodeId : null;
     const database = getStockDatabase();
     const { data, error } = await database.rpc("stock_catalog");
     if (error) throw error;
-    const items = priceCart(cart, data as CatalogProduct[]);
+    const { items, lines } = configuredCart(body?.cart, data as CatalogProduct[]);
     const stripe = getStripe();
     const origin = getSiteOrigin();
     // No URL is exposed until the database has atomically reserved every item.
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      line_items: items.map(item => ({
-        price_data: { currency: "eur", product_data: { name: item.name, metadata: { product_id: item.id } }, unit_amount: item.unit_amount },
+      line_items: lines.map(item => ({
+        price_data: { currency: "eur", product_data: { name: item.name, metadata: { product_id: item.id, size: item.size, color: item.color } }, unit_amount: item.unit_amount },
         quantity: item.quantity,
       })),
       ...(promotionCodeId ? { discounts: [{ promotion_code: promotionCodeId }] } : {}),
-      metadata: { stock_flow: "v1", promotion_code: promotionCodeId ?? "", cart_summary: items.map(item => `${item.name} × ${item.quantity}`).join(", ") },
+      metadata: { stock_flow: "v1", promotion_code: promotionCodeId ?? "", cart_summary: lines.map(item => `${item.name} × ${item.quantity}`).join(", ").slice(0, 500) },
       expires_at: Math.floor(Date.now() / 1000) + 35 * 60,
       success_url: `${origin}/success`,
       cancel_url: `${origin}/merch?canceled=true`,
@@ -33,9 +33,6 @@ export async function POST(request: Request) {
       p_session_id: session.id, p_items: items,
       p_expires_at: new Date(session.expires_at * 1000).toISOString(),
     });
-    if (!reservationError) {
-      await database.rpc("update_order_contact", { p_session_id: session.id, p_email: session.customer_details?.email || "", p_name: session.customer_details?.name || "" });
-    }
     if (reservationError || !session.url) {
       // A timeout can mean the DB committed. Expire at Stripe first; only then release.
       try {
