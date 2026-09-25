@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingBag, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { availableStock } from "@/lib/stock";
 
 interface Product {
@@ -46,7 +47,7 @@ export default function ProductModal({ product, quantityInCart, onClose, onAddTo
     }, 1500);
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
         <motion.div 
@@ -149,6 +150,6 @@ export default function ProductModal({ product, quantityInCart, onClose, onAddTo
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>, document.body
   );
 }
