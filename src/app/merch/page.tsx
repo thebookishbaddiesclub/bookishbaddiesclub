@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { availableStock } from "@/lib/stock";
 import FadeIn from "@/components/FadeIn";
 import Image from "next/image";
-import { ShoppingBag, Plus, Minus, Trash2, Info, Loader2 } from "lucide-react";
+import { ShoppingBag, Plus, Minus, Trash2, Info, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import ProductModal from "@/components/ProductModal";
 
 interface Product {
@@ -23,6 +23,7 @@ interface Product {
 export const dynamic = "force-dynamic";
 
 export default function MerchPage() {
+  const [photoIndices, setPhotoIndices] = useState<Record<string, number>>({});
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState<{ product: Product; quantity: number; size: string; color: string }[]>([]);
@@ -154,18 +155,25 @@ export default function MerchPage() {
           </FadeIn>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-            {products.map((product, idx) => (
-              <FadeIn key={product.id} delay={idx * 0.1}>
-                <div className="bg-white/50 backdrop-blur-sm border border-bb-beige rounded-[2.5rem] p-6 transition-all hover:shadow-xl hover:border-bb-rose/20 group">
+            {products.map((product, idx) => {
+            const photos = [product.imageUrl, ...(product.images || [])].filter(Boolean);
+            const photoIndex = (photoIndices[product.id] || 0) % Math.max(1, photos.length);
+            return (
+              <FadeIn key={product.id} delay={idx * 0.1} className="h-full min-w-0">
+                <div className="h-full flex flex-col bg-white/50 backdrop-blur-sm border border-bb-beige rounded-[2.5rem] p-6 transition-all hover:shadow-xl hover:border-bb-rose/20 group">
                   <div 
                     className="aspect-square bg-bb-beige/20 rounded-[2rem] mb-6 flex items-center justify-center relative overflow-hidden group-hover:scale-[0.98] transition-transform duration-500"
                     onClick={() => setSelectedProduct(product)}
                   >
-                     {product.imageUrl ? (
-                        <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                     {photos.length > 0 ? (
+                        <Image src={photos[photoIndex]} alt={product.name} fill className="object-cover" />
                      ) : (
                         <span className="font-serif text-bb-ink/20 uppercase tracking-widest text-xs">Photo à venir</span>
                      )}
+                     {photos.length > 1 && <>
+                       <button type="button" aria-label="Photo précédente" onClick={e => { e.stopPropagation(); setPhotoIndices(prev => ({ ...prev, [product.id]: (photoIndex - 1 + photos.length) % photos.length })); }} className="absolute left-2 top-1/2 -translate-y-1/2 h-11 w-11 flex items-center justify-center rounded-full bg-white/90 text-bb-ink shadow"><ChevronLeft className="h-5 w-5" /></button>
+                       <button type="button" aria-label="Photo suivante" onClick={e => { e.stopPropagation(); setPhotoIndices(prev => ({ ...prev, [product.id]: (photoIndex + 1) % photos.length })); }} className="absolute right-2 top-1/2 -translate-y-1/2 h-11 w-11 flex items-center justify-center rounded-full bg-white/90 text-bb-ink shadow"><ChevronRight className="h-5 w-5" /></button>
+                     </>}
                      <button 
                        className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md p-3 rounded-full text-bb-ink opacity-0 group-hover:opacity-100 transition-all shadow-md hover:text-bb-rose"
                        title="Aperçu rapide"
@@ -175,9 +183,9 @@ export default function MerchPage() {
                   </div>
                   
                   <div className="mb-6">
-                    <div className="flex justify-between items-start">
-                      <h3 className="font-serif text-xl tracking-tight text-bb-ink">{product.name}</h3>
-                      <p className="text-bb-rose font-bold uppercase tracking-widest text-xs">{product.price} €</p>
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4">
+                      <h3 className="min-w-0 break-words font-serif text-xl leading-snug tracking-tight text-bb-ink">{product.name}</h3>
+                      <p className="whitespace-nowrap text-right tabular-nums text-bb-rose font-bold tracking-wide text-sm">{product.price} €</p>
                     </div>
                     <div className="mt-2">
                        {product.coming_soon ? (<span className="text-sm font-bold text-bb-rose">Bientôt disponible</span>) : availableStock(product) === 0 ? (
@@ -190,7 +198,7 @@ export default function MerchPage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="mt-auto flex gap-2">
                     <button
                       onClick={() => addToCart(product)}
                       disabled={availableStock(product) <= quantityFor(product.id)}
@@ -207,7 +215,7 @@ export default function MerchPage() {
                   </div>
                 </div>
               </FadeIn>
-            ))}
+            ); })}
           </div>
         )}
       </div>
