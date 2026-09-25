@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShoppingBag, Check } from "lucide-react";
+import { X, ShoppingBag, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { availableStock } from "@/lib/stock";
@@ -61,7 +61,7 @@ export default function ProductModal({ product, quantityInCart, onClose, onAddTo
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative bg-bb-cream border border-bb-beige w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]"
+          className="relative bg-bb-cream border border-bb-beige w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-y-auto md:overflow-hidden flex flex-col md:flex-row max-h-[90dvh]"
         >
           <button 
             onClick={onClose}
@@ -71,7 +71,7 @@ export default function ProductModal({ product, quantityInCart, onClose, onAddTo
           </button>
 
           {/* Image */}
-          <div className="w-full md:w-1/2 aspect-square md:aspect-auto bg-bb-beige/30 relative">
+          <div className="w-full md:w-1/2 shrink-0 aspect-square md:aspect-auto bg-bb-beige/30 relative">
             {photos.length ? (
               <Image src={photos[photoIndex] || photos[0]} alt={product.name} fill className="object-cover" />
             ) : (
@@ -79,10 +79,15 @@ export default function ProductModal({ product, quantityInCart, onClose, onAddTo
                 Photo indisponible
               </div>
             )}
+            {photos.length > 1 && <>
+              <button type="button" aria-label="Photo précédente" onClick={() => setPhotoIndex((photoIndex - 1 + photos.length) % photos.length)} className="absolute left-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/90 shadow flex items-center justify-center text-bb-ink"><ChevronLeft className="h-5 w-5" /></button>
+              <button type="button" aria-label="Photo suivante" onClick={() => setPhotoIndex((photoIndex + 1) % photos.length)} className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/90 shadow flex items-center justify-center text-bb-ink"><ChevronRight className="h-5 w-5" /></button>
+              <span aria-live="polite" className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 text-xs text-bb-ink">{photoIndex + 1} / {photos.length}</span>
+            </>}
           </div>
 
           {/* Details */}
-          <div className="w-full md:w-1/2 p-10 overflow-y-auto space-y-8">
+          <div className="w-full md:w-1/2 min-w-0 shrink-0 p-6 sm:p-10 md:overflow-y-auto space-y-8">
             {photos.length > 1 && <div className="flex gap-2 flex-wrap" aria-label="Photos du produit">{photos.map((url, i) => <button type="button" key={`${url}-${i}`} aria-label={`Voir la photo ${i + 1}`} aria-pressed={photoIndex === i} onClick={() => setPhotoIndex(i)} className={`relative h-16 w-16 rounded-lg overflow-hidden border-2 ${photoIndex === i ? "border-bb-rose" : "border-transparent"}`}><Image src={url} alt="" fill className="object-cover" /></button>)}</div>}
             <header>
               <h2 className="text-3xl font-serif text-bb-ink leading-tight">{product.name}</h2>
@@ -91,7 +96,7 @@ export default function ProductModal({ product, quantityInCart, onClose, onAddTo
 
             <div className="space-y-4">
               <h4 className="text-[10px] uppercase tracking-widest font-black text-bb-ink/40">Description</h4>
-              <p className="text-bb-ink/70 leading-relaxed font-sans">{product.description}</p>
+              <p className="whitespace-pre-wrap break-words text-bb-ink/70 leading-relaxed font-sans">{product.description}</p>
             </div>
 
             {/* Options */}
