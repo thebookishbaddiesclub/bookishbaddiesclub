@@ -111,6 +111,12 @@ export default function MerchPage() {
     }
   };
 
+  // Preserve catalog order within each group; upcoming products are not sold out.
+  const sortedProducts = [...products].sort((a, b) =>
+    Number(!a.coming_soon && availableStock(a) === 0) -
+    Number(!b.coming_soon && availableStock(b) === 0)
+  );
+
   const cartTotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const discount = promoDiscount?.percentOff ? cartTotal * promoDiscount.percentOff / 100 : promoDiscount?.amountOff ? promoDiscount.amountOff / 100 : 0;
   const discountedTotal = Math.max(0, cartTotal - discount);
@@ -155,7 +161,7 @@ export default function MerchPage() {
           </FadeIn>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-            {products.map((product, idx) => {
+            {sortedProducts.map((product, idx) => {
             const photos = [product.imageUrl, ...(product.images || [])].filter(Boolean);
             const photoIndex = (photoIndices[product.id] || 0) % Math.max(1, photos.length);
             return (
