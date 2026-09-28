@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ShoppingBag, Calendar, BookOpen, Home, Instagram, Menu, X } from "lucide-react";
+import { ShoppingBag, Calendar, BookOpen, Home, Instagram, Twitch, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Icônes réseaux sociaux (non disponibles dans lucide)
@@ -159,6 +159,9 @@ export default function Navbar() {
           >
             <DiscordIcon />
           </a>
+          <a href="https://www.twitch.tv/thebookishbaddiesclub" target="_blank" rel="noopener noreferrer" className="text-bb-ink/40 hover:text-bb-rose transition-colors" title="Twitch" aria-label="Twitch du Bookish Baddies Club">
+            <Twitch className="w-3.5 h-3.5" aria-hidden="true" />
+          </a>
         </div>
 
         {/* Bouton burger mobile */}
@@ -235,6 +238,9 @@ export default function Navbar() {
                   title="Discord"
                 >
                   <DiscordIcon />
+                </a>
+                <a href="https://www.twitch.tv/thebookishbaddiesclub" target="_blank" rel="noopener noreferrer" className="p-3.5 rounded-full bg-bb-beige/30 text-bb-ink hover:text-bb-rose transition-colors" title="Twitch" aria-label="Twitch du Bookish Baddies Club">
+                  <Twitch className="w-5 h-5" aria-hidden="true" />
                 </a>
               </div>
             </nav>
