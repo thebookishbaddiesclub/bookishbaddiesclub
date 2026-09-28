@@ -425,58 +425,43 @@ export default function AdminPage() {
       {/* Liste Contenu Actuel */}
       <FadeIn delay={0.4} className="space-y-12 pb-20">
         <div className="flex flex-col items-center gap-4">
-          <h2 className="text-3xl md:text-4xl font-serif text-bb-ink italic">Gestion du Contenu Actuel</h2>
+          <h2 className="text-3xl md:text-4xl font-serif text-bb-ink italic">Gestion des lectures et de la boutique</h2>
           <div className="h-[1px] w-20 bg-bb-gold/40"></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          {/* Lectures Perpignan */}
-          <div className="space-y-8">
-            <div className="flex items-center gap-3 pb-4 border-b border-bb-beige">
-              <span className="w-1.5 h-1.5 rounded-full bg-bb-rose"></span>
-              <h3 className="text-[10px] uppercase tracking-[.3em] font-black text-bb-ink/60">Lectures Perpignan</h3>
-            </div>
-            <div className="space-y-4">
-              {books.filter(b => b.city === "Perpignan").length === 0 ? (
-                 <p className="text-bb-ink/30 text-[10px] uppercase font-black tracking-widest italic py-4">Aucune lecture</p>
-              ) : books.filter(b => b.city === "Perpignan").map(book => (
-                <div key={book.id} className="bg-white/60 backdrop-blur-sm p-6 rounded-[2rem] border border-bb-beige flex items-center justify-between group hover:border-bb-rose/20 transition-all shadow-sm">
-                  <div className="min-w-0 pr-4">
-                    <p className="font-serif text-base text-bb-ink truncate">{book.title}</p>
-                    <p className="text-[10px] text-bb-ink/40 font-black uppercase tracking-widest mt-1">{book.month}</p>
-                  </div>
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all shrink-0">
-                    <button onClick={() => startEditBook(book)} className="p-3 bg-bb-beige/30 rounded-full hover:text-bb-rose transition-colors" title="Modifier"><Edit2 className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => handleDelete("lectures", book.id, book.title)} className="p-3 bg-red-50 rounded-full text-red-400 hover:bg-red-500 hover:text-white transition-all" title="Supprimer"><Trash2 className="w-3.5 h-3.5" /></button>
-                  </div>
+          {["Perpignan", "Montpellier"].map(city => {
+            const cityBooks = books.filter(book => book.city === city);
+            const currentBooks = cityBooks.filter(book => !book.archived);
+            const archivedBooks = cityBooks.filter(book => book.archived);
+            const renderBook = (book: any) => (
+              <div key={book.id} className="bg-white/60 p-5 rounded-3xl border border-bb-beige shadow-sm space-y-3">
+                <div className="min-w-0">
+                  <p className="font-serif text-lg text-bb-ink break-words">{book.title}</p>
+                  {book.author && <p className="text-xs text-bb-ink/60 mt-1">{book.author}</p>}
+                  <p className="text-xs text-bb-rose font-semibold mt-2">{book.month}</p>
+                  {book.archived && book.rating != null && <p className="mt-1 text-sm text-bb-ink/70">Note du club : {book.rating} / 5</p>}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Lectures Montpellier */}
-          <div className="space-y-8">
-            <div className="flex items-center gap-3 pb-4 border-b border-bb-beige">
-              <span className="w-1.5 h-1.5 rounded-full bg-bb-accent"></span>
-              <h3 className="text-[10px] uppercase tracking-[.3em] font-black text-bb-ink/60">Lectures Montpellier</h3>
-            </div>
-            <div className="space-y-4">
-              {books.filter(b => b.city === "Montpellier").length === 0 ? (
-                 <p className="text-bb-ink/30 text-[10px] uppercase font-black tracking-widest italic py-4">Aucune lecture</p>
-              ) : books.filter(b => b.city === "Montpellier").map(book => (
-                <div key={book.id} className="bg-white/60 backdrop-blur-sm p-6 rounded-[2rem] border border-bb-beige flex items-center justify-between group hover:border-bb-rose/20 transition-all shadow-sm">
-                  <div className="min-w-0 pr-4">
-                    <p className="font-serif text-base text-bb-ink truncate">{book.title}</p>
-                    <p className="text-[10px] text-bb-ink/40 font-black uppercase tracking-widest mt-1">{book.month}</p>
-                  </div>
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all shrink-0">
-                    <button onClick={() => startEditBook(book)} className="p-3 bg-bb-beige/30 rounded-full hover:text-bb-rose transition-colors" title="Modifier"><Edit2 className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => handleDelete("lectures", book.id, book.title)} className="p-3 bg-red-50 rounded-full text-red-400 hover:bg-red-500 hover:text-white transition-all" title="Supprimer"><Trash2 className="w-3.5 h-3.5" /></button>
-                  </div>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => startEditBook(book)} className="inline-flex items-center gap-2 px-3 py-2 bg-bb-beige/30 rounded-full text-xs hover:text-bb-rose" aria-label={`Modifier ${book.title}`}><Edit2 className="w-3.5 h-3.5" />Modifier</button>
+                  <button type="button" onClick={() => handleDelete("lectures", book.id, book.title)} className="inline-flex items-center gap-2 px-3 py-2 bg-red-50 rounded-full text-xs text-red-500 hover:bg-red-100" aria-label={`Supprimer ${book.title}`}><Trash2 className="w-3.5 h-3.5" />Supprimer</button>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            );
+            return <section key={city} className="min-w-0 space-y-6" aria-label={`Lectures ${city}`}>
+              <h3 className="text-xl font-serif text-bb-ink pb-4 border-b border-bb-beige">Lectures — {city}</h3>
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-bb-rose">Lectures du mois en cours <span className="text-bb-ink/40">({currentBooks.length})</span></h4>
+                {currentBooks.length ? currentBooks.map(renderBook) : <p className="text-sm italic text-bb-ink/50">Aucune lecture en cours pour cette ville.</p>}
+              </div>
+              <details className="rounded-3xl border border-bb-beige bg-bb-beige/10 p-4">
+                <summary className="cursor-pointer text-sm font-bold text-bb-ink">Lectures archivées ({archivedBooks.length})</summary>
+                <div className="mt-4 space-y-4">
+                  {archivedBooks.length ? archivedBooks.map(renderBook) : <p className="text-sm italic text-bb-ink/50">Aucune lecture archivée pour cette ville.</p>}
+                </div>
+              </details>
+            </section>;
+          })}
 
           {/* Boutique */}
           <div className="space-y-8">
