@@ -5,7 +5,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import FadeIn from "./FadeIn";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ExternalLink } from "lucide-react";
+import { X, ExternalLink, Star } from "lucide-react";
 
 interface BookCardProps {
   title: string;
@@ -21,6 +21,23 @@ interface BookCardProps {
 
 export default function BookCard({ title, author, coverUrl, month, className, delay = 0, resume, lien_place_des_libraires, rating }: BookCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const score = rating != null && Number.isFinite(Number(rating))
+    ? Math.min(5, Math.max(0, Number(rating))) : null;
+  const ratingStars = score == null ? null : (
+    <div className="mt-2 flex flex-wrap items-center gap-2" role="img" aria-label={`Note du club : ${score.toLocaleString("fr-FR")} sur 5`}>
+      <span className="inline-flex gap-0.5" aria-hidden="true">
+        {Array.from({ length: 5 }, (_, index) => {
+          const fill = Math.round(Math.max(0, Math.min(1, score - index)) * 100);
+          return <span key={index} className="relative inline-block h-5 w-5">
+            <Star className="absolute inset-0 h-5 w-5 text-bb-gold/35" strokeWidth={1.5} />
+            <Star className="absolute inset-0 h-5 w-5 text-bb-gold fill-current" strokeWidth={1.5} style={{ clipPath: `inset(0 ${100 - fill}% 0 0)` }} />
+          </span>;
+        })}
+      </span>
+      <span className="text-xs font-medium text-bb-ink/60" aria-hidden="true">{score.toLocaleString("fr-FR")} / 5</span>
+    </div>
+  );
 
   // Prevent scrolling when modal is open
   useEffect(() => {
@@ -68,7 +85,7 @@ export default function BookCard({ title, author, coverUrl, month, className, de
       <div className="mt-4 px-1">
         <h3 className="font-serif text-lg leading-tight group-hover:text-bb-rose transition-colors duration-300 line-clamp-1">{title}</h3>
         <p className="text-[10px] text-bb-ink/60 mt-1 font-bold uppercase tracking-widest">{author}</p>
-        {rating != null && <p className="mt-2 text-lg leading-none tracking-[0.12em] text-bb-gold" aria-label={`Note ${rating} sur 5`}>{"★".repeat(Math.round(rating))}{"☆".repeat(5 - Math.round(rating))}</p>}
+        {ratingStars}
       </div>
     </FadeIn>
 
@@ -113,6 +130,7 @@ export default function BookCard({ title, author, coverUrl, month, className, de
                 <h2 className="text-3xl font-serif text-bb-ink mb-2 leading-tight">{title}</h2>
                 <p className="text-sm text-bb-rose font-bold uppercase tracking-widest">{author}</p>
                 {month && <p className="text-[10px] text-bb-ink/40 font-black uppercase tracking-[.2em] mt-3">{month}</p>}
+                {ratingStars}
               </div>
 
               <div className="flex-grow">
