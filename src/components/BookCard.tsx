@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import FadeIn from "./FadeIn";
@@ -12,6 +13,8 @@ interface BookCardProps {
   author: string;
   coverUrl?: string;
   month?: string;
+  city?: string;
+  review?: string;
   className?: string;
   delay?: number;
   resume?: string;
@@ -19,9 +22,10 @@ interface BookCardProps {
   rating?: number | null;
 }
 
-export default function BookCard({ title, author, coverUrl, month, className, delay = 0, resume, lien_place_des_libraires, rating }: BookCardProps) {
+export default function BookCard({ title, author, coverUrl, month, city, review, className, delay = 0, resume, lien_place_des_libraires, rating }: BookCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const dateCity = [month, city].filter(Boolean).join(" · ");
   const score = rating != null && Number.isFinite(Number(rating))
     ? Math.min(5, Math.max(0, Number(rating))) : null;
   const ratingStars = score == null ? null : (
@@ -39,14 +43,18 @@ export default function BookCard({ title, author, coverUrl, month, className, de
     </div>
   );
 
-  // Prevent scrolling when modal is open
   useEffect(() => {
-    if (isModalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => { document.body.style.overflow = "unset"; };
+    if (!isModalOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsModalOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [isModalOpen]);
 
   return (
@@ -89,75 +97,60 @@ export default function BookCard({ title, author, coverUrl, month, className, de
       </div>
     </FadeIn>
 
-    <AnimatePresence>
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+    {isModalOpen && createPortal(
+      <AnimatePresence>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             onClick={() => setIsModalOpen(false)}
-            className="absolute inset-0 bg-bb-ink/40 backdrop-blur-sm"
-          />
+            className="absolute inset-0 bg-bb-ink/50 backdrop-blur-sm" />
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            role="dialog" aria-modal="true" aria-label={title}
+            initial={{ opacity: 0, scale: 0.97, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-2xl bg-bb-cream rounded-[2rem] border border-bb-beige shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]"
+            className="relative w-full max-w-6xl max-h-[90dvh] overflow-y-auto md:overflow-hidden bg-bb-cream rounded-3xl border border-bb-beige shadow-2xl md:flex"
           >
-            <button 
+            <button autoFocus aria-label="Fermer la fiche du livre"
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 z-10 p-2 bg-bb-cream/80 backdrop-blur-md rounded-full text-bb-ink hover:text-bb-rose hover:bg-white transition-all shadow-sm"
-            >
+              className="sticky md:absolute top-3 float-right right-3 z-10 p-3 bg-bb-cream/95 rounded-full text-bb-ink hover:text-bb-rose shadow-sm">
               <X className="w-5 h-5" />
             </button>
-
-            {/* Cover Image */}
-            <div className="relative w-full md:w-2/5 aspect-[3/4] md:aspect-auto bg-bb-beige shrink-0">
+            <div className="relative w-full h-[45dvh] md:h-auto md:w-2/5 md:min-h-[65vh] bg-bb-beige/40 shrink-0">
               {coverUrl ? (
-                <Image src={coverUrl} alt={title} fill className="object-cover" />
+                <Image src={coverUrl} alt={`Couverture de ${title}`} fill
+                  sizes="(min-width: 768px) 40vw, 100vw"
+                  className="object-contain p-5 md:p-8" />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
-                  <span className="font-serif text-bb-ink/30 text-sm uppercase tracking-widest">Couverture</span>
-                </div>
+                <div className="absolute inset-0 flex items-center justify-center text-bb-ink/40">Couverture à venir</div>
               )}
             </div>
-
-            {/* Content */}
-            <div className="flex flex-col p-8 md:p-10 overflow-y-auto w-full">
-              <div className="mb-6">
-                <h2 className="text-3xl font-serif text-bb-ink mb-2 leading-tight">{title}</h2>
-                <p className="text-sm text-bb-rose font-bold uppercase tracking-widest">{author}</p>
-                {month && <p className="text-[10px] text-bb-ink/40 font-black uppercase tracking-[.2em] mt-3">{month}</p>}
+            <div className="w-full min-w-0 p-6 sm:p-8 md:p-10 md:pr-16 md:max-h-[90dvh] md:overflow-y-auto space-y-6">
+              <header>
+                <h2 className="text-3xl lg:text-4xl font-serif text-bb-ink leading-tight">{title}</h2>
+                <p className="mt-3 text-sm text-bb-rose font-bold uppercase tracking-widest">{author}</p>
+                {dateCity && <p className="mt-4 text-xs text-bb-ink/60 font-bold uppercase tracking-widest">{dateCity}</p>}
                 {ratingStars}
-              </div>
-
-              <div className="flex-grow">
-                <div className="w-8 h-[1px] bg-bb-gold/60 mb-6"></div>
-                <div className="text-sm text-bb-ink/80 leading-relaxed font-medium whitespace-pre-wrap">
-                  {resume ? resume : <span className="italic text-bb-ink/40">Le résumé de ce livre arrive très bientôt...</span>}
-                </div>
-              </div>
-
+              </header>
+              {review && <section>
+                <h3 className="font-serif text-xl text-bb-rose mb-3">L’avis du bookclub</h3>
+                <p className="text-sm text-bb-ink/80 leading-relaxed whitespace-pre-wrap break-words">{review}</p>
+              </section>}
               {lien_place_des_libraires && (
-                <div className="mt-10 pt-6 border-t border-bb-beige/50">
-                  <a 
-                    href={lien_place_des_libraires}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-4 px-6 bg-bb-ink text-bb-cream rounded-full font-black uppercase tracking-widest text-[10px] hover:bg-bb-rose transition-all shadow-xl active:scale-95 group"
-                  >
-                    Je le réserve dans ma librairie
-                    <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                  </a>
-                </div>
+                <a href={lien_place_des_libraires} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-3 w-full py-4 px-5 bg-bb-ink text-bb-cream rounded-2xl font-bold text-sm text-center hover:bg-bb-rose transition-colors">
+                  Je le réserve chez mon libraire
+                  <ExternalLink className="w-4 h-4 shrink-0" />
+                </a>
               )}
+              <section className="pt-6 border-t border-bb-beige">
+                <h3 className="font-serif text-xl text-bb-ink mb-3">Résumé</h3>
+                <p className="text-sm text-bb-ink/80 leading-relaxed whitespace-pre-wrap break-words">
+                  {resume || "Le résumé de ce livre arrive très bientôt…"}
+                </p>
+              </section>
             </div>
           </motion.div>
         </div>
-      )}
-    </AnimatePresence>
+      </AnimatePresence>, document.body)}
     </>
   );
 }
