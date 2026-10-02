@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ShoppingBag, Calendar, BookOpen, Home, Instagram, Twitch, Menu, X } from "lucide-react";
+import { ShoppingBag, Calendar, BookOpen, Home, Heart, Instagram, Twitch, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Icônes réseaux sociaux (non disponibles dans lucide)
@@ -36,6 +36,7 @@ export default function Navbar() {
 
   const navLinks = [
     { href: "/", label: "Accueil", icon: Home },
+    { href: "/le-club", label: "Le Club", icon: Heart },
     { href: "/lectures", label: "Lectures", icon: BookOpen },
     { href: "/evenements", label: "Événements", icon: Calendar },
     { href: "/merch", label: "Merch", icon: ShoppingBag },
@@ -105,11 +106,11 @@ export default function Navbar() {
 
         {/* Séparateur vertical au scroll */}
         {isScrolled && (
-          <div className="hidden md:block h-4 w-px bg-bb-beige/60 shrink-0" />
+          <div className="hidden lg:block h-4 w-px bg-bb-beige/60 shrink-0" />
         )}
 
         {/* Liens desktop */}
-        <ul className="hidden md:flex items-center gap-7">
+        <ul className="hidden lg:flex items-center gap-7">
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
@@ -130,7 +131,7 @@ export default function Navbar() {
         </ul>
 
         {/* Séparateur + Icônes réseaux sociaux */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3">
           <div className="h-4 w-px bg-bb-beige/50" />
           <a
             href="https://www.instagram.com/bookishbaddiesclub/"
@@ -166,7 +167,7 @@ export default function Navbar() {
 
         {/* Bouton burger mobile */}
         <button
-          className="md:hidden p-1.5 text-bb-ink/70 hover:text-bb-rose transition-colors"
+          className="lg:hidden p-1.5 text-bb-ink/70 hover:text-bb-rose transition-colors"
           onClick={() => setIsMobileMenuOpen(true)}
           aria-label="Ouvrir le menu"
         >

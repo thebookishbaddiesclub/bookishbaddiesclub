@@ -1,0 +1,100 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import type { ReactNode, CSSProperties } from "react";
+import { clubMemories, type MemoryChapter } from "@/data/club-memories";
+import styles from "./page.module.css";
+
+export const metadata: Metadata = {
+  title: "Le Club — Bookish Baddies Club",
+  description: "Des livres, des rencontres et une bande de copines. Découvrez l’histoire du Bookish Baddies Club, à Montpellier et Perpignan.",
+};
+
+function Memories({ chapter }: { chapter: MemoryChapter }) {
+  const photos = clubMemories.filter(photo => photo.chapter === chapter);
+  if (!photos.length) return null;
+  return <aside className={styles.memories} aria-label="Souvenirs du club">
+    {photos.map((photo, index) => <figure key={photo.src} className={styles.photo}
+      style={{ "--tilt": `${index % 2 ? 3 : -4}deg` } as CSSProperties}>
+      {/* Native image accepts the community’s hosted photos without broadening Next image hosts. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={photo.src} alt={photo.alt} loading="lazy" decoding="async"
+        className={photo.orientation === "portrait" ? styles.portrait : styles.landscape} />
+      <figcaption>{photo.caption}</figcaption>
+    </figure>)}
+  </aside>;
+}
+
+function Chapter({ id, number, title, children }: { id: MemoryChapter; number: string; title: ReactNode; children: ReactNode }) {
+  const hasPhotos = clubMemories.some(photo => photo.chapter === id);
+  return <section id={id} className={`${styles.chapter} ${hasPhotos ? styles.withPhotos : ""}`}>
+    <div className={styles.story}>
+      <span className={styles.number}>{number} / LE CLUB</span>
+      <h2>{title}</h2>
+      <div className={styles.copy}>{children}</div>
+    </div>
+    <Memories chapter={id} />
+  </section>;
+}
+
+const formats = [
+  { id: "bookclub", title: "Le bookclub", text: "Lectures communes, rencontres mensuelles, débats et discussions autour de nos dernières obsessions littéraires.", link: "/lectures", label: "Nos lectures communes" },
+  { id: "evenements", title: "Les événements", text: "Avant-premières cinéma, soirées thématiques, rencontres et activités créatives.", link: "/evenements", label: "Les prochains rendez-vous" },
+  { id: "baddies-night", title: "Baddies Night", text: "Nos soirées sur Twitch avec des autrices pour parler de leurs romans, de leur parcours, de leurs lectures et de tout ce qui se passe entre les lignes.", link: "https://www.twitch.tv/thebookishbaddiesclub", label: "Retrouvons-nous sur Twitch" },
+  { id: "weekends", title: "Les week-ends lecture", text: "Des parenthèses cosy entre lectrices : de beaux endroits, des livres, des activités, de la nourriture et du temps pour déconnecter.", link: "/evenements", label: "Découvrir les événements" },
+] as const;
+
+export default function ClubPage() {
+  return <article className={styles.page}>
+    <section className={styles.hero}>
+      <p className={styles.eyebrow}>BOOKISH BADDIES CLUB ❤️‍🔥</p>
+      <h1>Plus qu’un<br /><em>bookclub.</em></h1>
+      <p className={styles.intro}>Une bande de copines qui aiment<br className={styles.desktopBreak} /> beaucoup trop parler de livres.</p>
+      <p className={styles.lead}>Le Bookish Baddies Club est né d’une idée toute simple : créer l’espace qu’on aurait aimé trouver en tant que lectrices. Un endroit pour rencontrer d’autres passionnées, parler pendant des heures de nos lectures et vivre ensemble tout ce qui existe autour des livres.</p>
+      <Memories chapter="hero" />
+      <a href="#origine" className={styles.scroll}>Notre histoire <span aria-hidden="true">↓</span></a>
+    </section>
+
+    <Chapter id="origine" number="02" title={<>On voulait juste trouver<br /><em>notre bande de copines.</em></>}>
+      <p>Quand on adore lire, Internet permet de parler livres avec des milliers de personnes. Mais trouver des lectrices avec qui partager cette passion dans la vraie vie ? C’était une autre histoire.</p>
+      <p>Et dans le Sud de la France, les événements autour de la littérature et de nos univers préférés étaient encore peu nombreux.</p>
+      <blockquote>Alors plutôt que d’attendre qu’il se passe quelque chose, on a décidé de le créer.</blockquote>
+      <p>Le Bookish Baddies Club est né avec l’envie de réunir des lectrices, de créer de vraies rencontres et d’imaginer les expériences littéraires auxquelles nous aurions nous-mêmes rêvé de participer.</p>
+    </Chapter>
+
+    <Chapter id="communaute" number="03" title={<>Venir pour les livres.<br /><em>Rester pour les copines.</em></>}>
+      <p>Le cœur du Bookish Baddies Club, ce sont les rencontres.</p>
+      <p>On vient parler de personnages fictifs comme s’ils existaient vraiment, défendre nos unpopular opinions, découvrir de nouvelles lectures et partager nos dernières obsessions.</p>
+      <p>Mais surtout, on rencontre d’autres lectrices.</p>
+      <blockquote>Tu peux venir seule.<br />C’est même un peu le principe.</blockquote>
+    </Chapter>
+
+    <section className={styles.formats} aria-labelledby="formats-title">
+      <span className={styles.number}>04 / LES LIVRES, MAIS PAS QUE</span>
+      <h2 id="formats-title">Les livres, on les vit aussi<br /><em>en dehors de nos bibliothèques.</em></h2>
+      {formats.map((format, index) => <section key={format.id} className={`${styles.format} ${clubMemories.some(photo => photo.chapter === format.id) ? styles.withPhotos : ""}`}>
+        <div className={styles.story}>
+          <span className={styles.formatIndex}>0{index + 1}</span>
+          <h3>{format.title}</h3>
+          <p>{format.text}</p>
+          <Link href={format.link} className={styles.textLink}>{format.label} <span aria-hidden="true">↗</span></Link>
+        </div>
+        <Memories chapter={format.id} />
+      </section>)}
+    </section>
+
+    <Chapter id="avenir" number="05" title={<>Et on ne compte pas<br /><em>s’arrêter là.</em></>}>
+      <p>Notre envie est de continuer à imaginer les expériences qu’on rêverait nous-mêmes de vivre en tant que lectrices : rencontres, soirées, ateliers créatifs, week-ends lecture, collaborations avec des autrices, maisons d’édition et marques…</p>
+      <p>Toujours avec la même idée : <strong>faire sortir les livres de nos bibliothèques pour créer des souvenirs autour d’eux.</strong></p>
+    </Chapter>
+    <section className={styles.finale}>
+      <Memories chapter="finale" />
+      <p className={styles.eyebrow}>IL RESTE UNE PLACE POUR TOI</p>
+      <h2>Et le prochain souvenir ?<br /><em>On le crée ensemble.</em></h2>
+      <div className={styles.actions}>
+        <Link className={styles.primary} href="/evenements">Voir les prochains événements <span aria-hidden="true">→</span></Link>
+        <a className={styles.secondary} href="https://tally.so/r/jaoWo6">Rejoindre le Club</a>
+      </div>
+      <p className={styles.signature}>Montpellier · Perpignan · et tant de souvenirs à créer</p>
+    </section>
+  </article>;
+}
