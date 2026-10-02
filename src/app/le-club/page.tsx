@@ -49,17 +49,40 @@ export default function ClubPage() {
       <p className={styles.eyebrow}>BOOKISH BADDIES CLUB ❤️‍🔥</p>
       <h1>Plus qu’un<br /><em>bookclub.</em></h1>
       <p className={styles.intro}>Une bande de copines qui aiment<br className={styles.desktopBreak} /> beaucoup trop parler de livres.</p>
-      <p className={styles.lead}>Le Bookish Baddies Club est né d’une idée toute simple : créer l’espace qu’on aurait aimé trouver en tant que lectrices. Un endroit pour rencontrer d’autres passionnées, parler pendant des heures de nos lectures et vivre ensemble tout ce qui existe autour des livres.</p>
+      <p className={styles.lead}>Le Bookish Baddies Club est né d’une idée toute simple : créer l’espace que j’aurais aimé trouver en tant que lectrice. Un endroit pour rencontrer d’autres passionnées, parler pendant des heures de nos lectures et vivre ensemble tout ce qui existe autour des livres.</p>
       <Memories chapter="hero" />
       <a href="#origine" className={styles.scroll}>Notre histoire <span aria-hidden="true">↓</span></a>
     </section>
 
-    <Chapter id="origine" number="02" title={<>On voulait juste trouver<br /><em>notre bande de copines.</em></>}>
-      <p>Quand on adore lire, Internet permet de parler livres avec des milliers de personnes. Mais trouver des lectrices avec qui partager cette passion dans la vraie vie ? C’était une autre histoire.</p>
-      <p>Et dans le Sud de la France, les événements autour de la littérature et de nos univers préférés étaient encore peu nombreux.</p>
-      <blockquote>Alors plutôt que d’attendre qu’il se passe quelque chose, on a décidé de le créer.</blockquote>
-      <p>Le Bookish Baddies Club est né avec l’envie de réunir des lectrices, de créer de vraies rencontres et d’imaginer les expériences littéraires auxquelles nous aurions nous-mêmes rêvé de participer.</p>
+    <Chapter id="origine" number="02" title={<>Je voulais juste trouver<br /><em>des copines avec qui parler livres.</em></>}>
+      <p>Moi, c’est Anaïs ! Quand j’ai emménagé à Montpellier, mes copines avec qui papoter livres étaient loin : j’ai créé le bookclub pour rencontrer des lectrices dans ma nouvelle ville, discuter de nos lectures et aller ensemble en librairie.</p>
+      <p>Puis j’ai déménagé à Perpignan, et je me suis dit : pourquoi ne pas faire se rencontrer les lectrices d’ici aussi ?</p>
+      <blockquote>Spoiler : au tout premier bookclub, j’étais ultra-stressée.</blockquote>
     </Chapter>
+
+    <section className={styles.team} aria-labelledby="team-title">
+      <p className={styles.eyebrow}>LES VISAGES DU CLUB</p>
+      <h2 id="team-title">Derrière les rencontres,<br /><em>des lectrices comme toi.</em></h2>
+      <div className={styles.teamGrid}>
+        {[
+          { id: "anais", name: "Anaïs", role: "Créatrice du Bookish Baddies Club", book: "Le Chevalier et la Phalène" },
+          { id: "deborah", name: "Déborah", role: "Ambassadrice de Montpellier", book: "Le Chevalier et la Phalène" },
+          { id: "lea", name: "Léa", role: "Ambassadrice de Perpignan", book: "Le Royaume des Cendres — Le Trône de Verre, tome 7" },
+        ].map(person => <article key={person.name} className={styles.profile}>
+          <div className={styles.profilePortrait}>
+            <h3 className="sr-only">{person.name}</h3>
+            <svg className={styles.curvedName} viewBox="0 0 300 300" aria-hidden="true">
+              <defs><path id={`name-arc-${person.id}`} d="M 55,96 Q 150,-8 245,96" /></defs>
+              <text><textPath href={`#name-arc-${person.id}`} startOffset="50%" textAnchor="middle">{person.name}</textPath></text>
+            </svg>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/club/${person.id}.webp`} alt={`Portrait de ${person.name}`} width={1000} height={1000} loading="lazy" />
+          </div>
+          <p className={styles.role}>{person.role}</p>
+          <p className={styles.favorite}><span>Lecture préférée</span>{person.book}</p>
+        </article>)}
+      </div>
+    </section>
 
     <Chapter id="communaute" number="03" title={<>Venir pour les livres.<br /><em>Rester pour les copines.</em></>}>
       <p>Le cœur du Bookish Baddies Club, ce sont les rencontres.</p>
@@ -82,8 +105,8 @@ export default function ClubPage() {
       </section>)}
     </section>
 
-    <Chapter id="avenir" number="05" title={<>Et on ne compte pas<br /><em>s’arrêter là.</em></>}>
-      <p>Notre envie est de continuer à imaginer les expériences qu’on rêverait nous-mêmes de vivre en tant que lectrices : rencontres, soirées, ateliers créatifs, week-ends lecture, collaborations avec des autrices, maisons d’édition et marques…</p>
+    <Chapter id="avenir" number="05" title={<>Et je ne compte pas<br /><em>m’arrêter là.</em></>}>
+      <p>Mon envie est de continuer à imaginer les expériences que je rêverais de vivre en tant que lectrice : rencontres, soirées, ateliers créatifs, week-ends lecture, collaborations avec des autrices, maisons d’édition et marques…</p>
       <p>Toujours avec la même idée : <strong>faire sortir les livres de nos bibliothèques pour créer des souvenirs autour d’eux.</strong></p>
     </Chapter>
     <section className={styles.finale}>
