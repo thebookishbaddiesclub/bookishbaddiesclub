@@ -67,12 +67,12 @@ export default function ClubPage() {
         {[
           { id: "anais", name: "Anaïs", role: "Créatrice du Bookish Baddies Club", book: "Le Chevalier et la Phalène" },
           { id: "deborah", name: "Déborah", role: "Ambassadrice de Montpellier", book: "Le Chevalier et la Phalène" },
-          { id: "lea", name: "Léa", role: "Ambassadrice de Perpignan", book: "Le Royaume des Cendres — Le Trône de Verre, tome 7" },
+          { id: "lea", name: "Léa", role: "Ambassadrice de Perpignan", book: <>Le Royaume des Cendres —<br />Le Trône de Verre, Tome 7</> },
         ].map(person => <article key={person.name} className={styles.profile}>
           <div className={styles.profilePortrait}>
             <h3 className="sr-only">{person.name}</h3>
             <svg className={styles.curvedName} viewBox="0 0 300 300" aria-hidden="true">
-              <defs><path id={`name-arc-${person.id}`} d="M 55,96 Q 150,-8 245,96" /></defs>
+              <defs><path id={`name-arc-${person.id}`} d={person.id === "lea" ? "M 55,78 Q 150,-26 245,78" : "M 55,96 Q 150,-8 245,96"} /></defs>
               <text><textPath href={`#name-arc-${person.id}`} startOffset="50%" textAnchor="middle">{person.name}</textPath></text>
             </svg>
             {/* eslint-disable-next-line @next/next/no-img-element */}
