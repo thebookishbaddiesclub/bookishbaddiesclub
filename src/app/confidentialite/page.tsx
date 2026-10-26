@@ -16,6 +16,12 @@ export default function Confidentialite() {
             <p>Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et d'effacement de vos données personnelles.</p>
           </section>
 
+          <section className="space-y-4">
+            <h2 className="text-xs uppercase tracking-[.4em] font-black text-bb-rose">Statistiques de visite</h2>
+            <p>Nous utilisons Vercel Web Analytics pour mesurer la fréquentation du site et les pages consultées. Ce service fournit des statistiques agrégées sans cookies de suivi. Les pages d’administration et de connexion sont exclues, et les paramètres des URL ne sont pas transmis dans les adresses des pages mesurées.</p>
+            <p><a href="https://vercel.com/docs/analytics/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline">En savoir plus sur les données traitées par Vercel Web Analytics</a></p>
+          </section>
+
           <section className="space-y-4 pt-10 border-t border-bb-beige">
             <h2 className="text-xs uppercase tracking-[.4em] font-black text-bb-rose">Cookies</h2>
             <p>Nous utilisons uniquement des cookies nécessaires au bon fonctionnement de la boutique et de votre panier d'achat.</p>
