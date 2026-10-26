@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import FadeIn from "@/components/FadeIn";
+import AdminAnalytics from "@/components/AdminAnalytics";
 import { 
   Plus, Book, ShoppingBag, Upload, Check, Trash2, Edit2, 
   Users, BarChart3, BookOpen, LogOut, LayoutDashboard 
@@ -294,26 +295,17 @@ export default function AdminPage() {
 
       {/* Stats Section */}
       <FadeIn delay={0.1} className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.5rem] border border-bb-beige shadow-sm hover:shadow-md transition-all group">
-          <div className="flex items-center justify-between mb-6">
-            <div className="p-3 bg-bb-rose/10 rounded-2xl text-bb-rose group-hover:scale-110 transition-transform">
-              <Users className="w-6 h-6" />
-            </div>
-            <span className="text-[10px] font-black text-bb-ink/20 uppercase tracking-widest">30 derniers jours</span>
-          </div>
-          <p className="text-4xl font-serif text-bb-ink">1,284</p>
-          <h3 className="text-[10px] uppercase font-black tracking-widest text-bb-ink/40 mt-2">Visiteurs Uniques</h3>
-        </div>
+        <AdminAnalytics />
 
         <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.5rem] border border-bb-beige shadow-sm hover:shadow-md transition-all group">
           <div className="flex items-center justify-between mb-6">
             <div className="p-3 bg-bb-accent/10 rounded-2xl text-bb-accent group-hover:scale-110 transition-transform">
               <BarChart3 className="w-6 h-6" />
             </div>
-            <span className="text-[10px] font-black text-bb-ink/20 uppercase tracking-widest">Ce mois-ci</span>
+            <span className="text-[10px] font-black text-bb-ink/20 uppercase tracking-widest">Catalogue</span>
           </div>
-          <p className="text-4xl font-serif text-bb-ink">{products.length * 12}</p>
-          <h3 className="text-[10px] uppercase font-black tracking-widest text-bb-ink/40 mt-2">Commandes Boutique</h3>
+          <p className="text-4xl font-serif text-bb-ink">{products.length}</p>
+          <h3 className="text-[10px] uppercase font-black tracking-widest text-bb-ink/40 mt-2">Produits au catalogue</h3>
         </div>
 
         <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.5rem] border border-bb-beige shadow-sm hover:shadow-md transition-all group">
