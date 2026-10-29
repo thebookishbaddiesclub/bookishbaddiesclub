@@ -45,6 +45,7 @@ export async function POST(request: Request) {
   try {
     const table = type === "lectures" ? "books" : type === "history" ? "reading_history" : type === "events" ? "events" : "products";
     const adminSupabase = getAdminSupabase();
+    if (table === "events" && data?.category !== undefined && !["bookevents", "twitch"].includes(data.category)) return NextResponse.json({ error: "Catégorie invalide." }, { status: 400 });
     if (table === "products" && (!Number.isSafeInteger(data?.stock) || data.stock < 0)) {
       return NextResponse.json({ error: "Le stock doit être un entier positif ou nul." }, { status: 400 });
     }
@@ -69,6 +70,7 @@ export async function PUT(request: Request) {
   try {
     const table = type === "lectures" ? "books" : type === "history" ? "reading_history" : type === "events" ? "events" : "products";
     const adminSupabase = getAdminSupabase();
+    if (table === "events" && data?.category !== undefined && !["bookevents", "twitch"].includes(data.category)) return NextResponse.json({ error: "Catégorie invalide." }, { status: 400 });
     if (table === "products" && (!Number.isSafeInteger(data?.stock) || data.stock < 0 || !Number.isSafeInteger(expectedStock))) {
       return NextResponse.json({ error: "Stock invalide. Recharge les produits avant de modifier." }, { status: 400 });
     }
