@@ -1,7 +1,8 @@
 "use client";
 import {useState} from "react";
 import type {TicketConfig} from "@/lib/tickets";
-export default function TicketForm({id,config}:{id:string;config:TicketConfig}) {
+import {euros,type PassDetails} from "@/lib/event-pass";
+export default function TicketForm({id,config,pass}:{id:string;config:TicketConfig;pass?:PassDetails}) {
   const [index,setIndex]=useState(0),[busy,setBusy]=useState(false),[error,setError]=useState("");
   const offer=config.offers[index];
   async function submit(e:React.FormEvent<HTMLFormElement>) {
@@ -13,7 +14,7 @@ export default function TicketForm({id,config}:{id:string;config:TicketConfig}) 
     }));
     setBusy(true);setError("");
     try {
-      const res=await fetch("/api/tickets",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,index,configuration:config,phone:form.get("phone"),guests})});
+      const res=await fetch("/api/tickets",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,index,passId:pass?.id,expectedTotal:pass?.total,configuration:config,phone:form.get("phone"),guests})});
       const data=await res.json();
       if(!res.ok || !data.url) throw Error(data.error || "Réservation indisponible.");
       location.assign(data.url);
@@ -27,6 +28,7 @@ export default function TicketForm({id,config}:{id:string;config:TicketConfig}) 
       {config.diet && <label className="block">Régime alimentaire (facultatif)<input className="admin-input" name={"diet"+i} maxLength={300}/></label>}
       {config.questions.map((q,j)=><label key={j} className="block">{q} (facultatif)<input className="admin-input" name={"answer"+i+"-"+j} maxLength={500}/></label>)}
     </fieldset>)}
+    {pass && <section className="space-y-2 rounded-2xl border p-5"><h2 className="font-serif text-2xl">Ton panier</h2>{[pass.first,pass.second].map((event,i)=><p key={event.id}>{event.title} · 1 place · {euros(pass.prices[i])}</p>)}<p className="text-bb-rose">Réduction pass 2 événements · −{euros(pass.total-offer.cents)}</p><strong>Total à payer · {euros(offer.cents)}</strong></section>}
     {error && <p role="alert">{error}</p>}
     <button className="rounded-full bg-bb-rose px-6 py-3 text-white" disabled={busy}>{busy?"Ouverture du paiement…":"Payer "+(offer.cents/100).toLocaleString("fr-FR",{style:"currency",currency:"EUR"})}</button>
   </form>;
