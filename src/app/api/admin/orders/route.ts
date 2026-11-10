@@ -1,9 +1,10 @@
+import {validSession} from "@/lib/admin-session";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getStockDatabase, getStripe } from "@/lib/server/clients";
 import { sendOrderStatusEmail } from "@/lib/email";
 
-async function authorized() { return (await cookies()).get("admin_session")?.value === "true"; }
+async function authorized() { return validSession((await cookies()).get("admin_session")?.value); }
 
 export async function GET() {
   if (!(await authorized())) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });

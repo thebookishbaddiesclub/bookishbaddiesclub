@@ -1,3 +1,5 @@
+import {validSession} from "@/lib/admin-session";
+import { validTickets } from "@/lib/tickets";
 import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { createClient } from "@supabase/supabase-js";
@@ -12,7 +14,7 @@ function getAdminSupabase() {
 
 async function verifyAuth() {
   const cookieStore = await cookies();
-  return cookieStore.get("admin_session")?.value === "true";
+  return validSession(cookieStore.get("admin_session")?.value);
 }
 
 // GET: Récupérer les données actuelles
@@ -45,6 +47,7 @@ export async function POST(request: Request) {
   try {
     const table = type === "lectures" ? "books" : type === "history" ? "reading_history" : type === "events" ? "events" : "products";
     const adminSupabase = getAdminSupabase();
+    if (table === "events" && data?.ticketing != null && !validTickets(data.ticketing)) return NextResponse.json({error:"Billetterie invalide."},{status:400});
     if (table === "events" && data?.category !== undefined && !["bookevents", "twitch"].includes(data.category)) return NextResponse.json({ error: "Catégorie invalide." }, { status: 400 });
     if (table === "products" && (!Number.isSafeInteger(data?.stock) || data.stock < 0)) {
       return NextResponse.json({ error: "Le stock doit être un entier positif ou nul." }, { status: 400 });
@@ -70,6 +73,7 @@ export async function PUT(request: Request) {
   try {
     const table = type === "lectures" ? "books" : type === "history" ? "reading_history" : type === "events" ? "events" : "products";
     const adminSupabase = getAdminSupabase();
+    if (table === "events" && data?.ticketing != null && !validTickets(data.ticketing)) return NextResponse.json({error:"Billetterie invalide."},{status:400});
     if (table === "events" && data?.category !== undefined && !["bookevents", "twitch"].includes(data.category)) return NextResponse.json({ error: "Catégorie invalide." }, { status: 400 });
     if (table === "products" && (!Number.isSafeInteger(data?.stock) || data.stock < 0 || !Number.isSafeInteger(expectedStock))) {
       return NextResponse.json({ error: "Stock invalide. Recharge les produits avant de modifier." }, { status: 400 });

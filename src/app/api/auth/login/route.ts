@@ -1,3 +1,4 @@
+import {issueSession} from "@/lib/admin-session";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
@@ -7,12 +8,12 @@ export async function POST(request: Request) {
   const adminUser = process.env.ADMIN_USERNAME;
   const adminPass = process.env.ADMIN_PASSWORD;
 
-  if (username === adminUser && password === adminPass) {
+  if (adminUser && adminPass && username === adminUser && password === adminPass) {
     const response = NextResponse.json({ success: true });
     
     // Set an HTTP-only cookie for the session (duration 7 days)
     const cookieStore = await cookies();
-    cookieStore.set("admin_session", "true", {
+    cookieStore.set("admin_session", await issueSession(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

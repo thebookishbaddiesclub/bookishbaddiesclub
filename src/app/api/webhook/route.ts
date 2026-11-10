@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { handleTicket } from "@/lib/server/ticket-payment";
 import type Stripe from "stripe";
 import { getStockDatabase, getStripe } from "@/lib/server/clients";
 import { sendOrderEmails } from "@/lib/email";
@@ -18,6 +19,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   }
   const session = event.data.object as Stripe.Checkout.Session;
+  if (session.metadata?.ticket_flow === "v1" && session.mode === "payment") {
+    try { await handleTicket(session); return NextResponse.json({received:true}); }
+    catch { return NextResponse.json({error:"Réservation à réessayer"}, {status:500}); }
+  }
   // Existing Stripe sessions / other integrations have no reliable stock mapping.
   if (session.metadata?.stock_flow !== "v1" || session.mode !== "payment") {
     return NextResponse.json({ received: true });

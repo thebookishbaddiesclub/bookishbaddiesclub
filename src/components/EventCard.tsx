@@ -4,7 +4,9 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { eventCategory } from "@/lib/event-category";
 
-export type ClubEvent = { id: string; title: string; starts_at: string; city: string; summary?: string; image_url?: string; action_url?: string; action_label?: string; category?: string };
+import type { TicketConfig } from "@/lib/tickets";
+
+export type ClubEvent = { ticketing?: TicketConfig; id: string; title: string; starts_at: string; city: string; summary?: string; image_url?: string; action_url?: string; action_label?: string; category?: string };
 
 export default function EventCard({ event, past = false }: { event: ClubEvent; past?: boolean }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -14,11 +16,11 @@ export default function EventCard({ event, past = false }: { event: ClubEvent; p
   const location = twitch ? "En ligne · Twitch" : event.city;
   const description = event.summary || "";
   const excerpt = description.length > 180 ? `${description.slice(0, 180).trimEnd()}…` : description;
-  const actionUrl = event.action_url && /^https?:\/\//i.test(event.action_url) ? event.action_url : null;
+  const actionUrl = event.ticketing ? "/billetterie/"+event.id : event.action_url && /^https?:\/\//i.test(event.action_url) ? event.action_url : null;
   const restoreScroll = () => { if (previousOverflow.current !== null) { document.body.style.overflow = previousOverflow.current; previousOverflow.current = null; } };
   useEffect(() => restoreScroll, []);
   const open = () => { dialog.current?.showModal(); previousOverflow.current = document.body.style.overflow; document.body.style.overflow = "hidden"; };
-  const ticket = () => actionUrl && !past ? <a href={actionUrl} target="_blank" rel="noopener noreferrer" className="inline-flex justify-center rounded-full bg-bb-rose px-5 py-3 text-xs font-bold text-white">{twitch ? "Voir sur Twitch" : "Je prends ma place"}</a> : null;
+  const ticket = () => actionUrl && !past ? <a href={actionUrl} target={event.ticketing ? undefined : "_blank"} rel="noopener noreferrer" className="inline-flex justify-center rounded-full bg-bb-rose px-5 py-3 text-xs font-bold text-white">{twitch && !event.ticketing ? "Voir sur Twitch" : "Je prends ma place"}</a> : null;
   return <>
     <article className="flex flex-col overflow-hidden rounded-[2rem] border border-bb-beige bg-white/60 shadow-sm">
       {event.image_url ? <div className="relative aspect-[16/9]"><Image src={event.image_url} alt={event.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" /></div> : <div className="flex aspect-[16/9] items-center justify-center bg-bb-beige/30 text-5xl" aria-hidden="true">{twitch ? "📺" : "✨"}</div>}

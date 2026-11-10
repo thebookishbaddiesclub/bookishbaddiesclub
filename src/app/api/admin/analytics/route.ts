@@ -1,9 +1,10 @@
+import {validSession} from "@/lib/admin-session";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 export async function GET() {
   const reply = (body: object, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "private, no-store" } });
-  if ((await cookies()).get("admin_session")?.value !== "true") return reply({ error: "Non autorisé" }, 401);
+  if (!await validSession((await cookies()).get("admin_session")?.value)) return reply({ error: "Non autorisé" }, 401);
   const token = process.env.VERCEL_ANALYTICS_TOKEN;
   const projectId = process.env.VERCEL_PROJECT_ID;
   if (!token || !projectId) return reply({ error: "Connexion Vercel à configurer", configured: false }, 503);

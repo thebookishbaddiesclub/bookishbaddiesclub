@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {TicketSettings, Participants} from "@/components/TicketSettings";
+import {validTickets,type TicketConfig} from "@/lib/tickets";
 import FadeIn from "@/components/FadeIn";
 import { eventCategories, eventCategory } from "@/lib/event-category";
 import AdminAnalytics from "@/components/AdminAnalytics";
@@ -37,6 +39,10 @@ function eventInstant(dateInput: string, time: string) {
 }
 
 export default function AdminPage() {
+  const [tab,setTab]=useState("lectures");
+  const [tickets,setTickets]=useState<TicketConfig|null>(null);
+  const [participants,setParticipants]=useState("");
+  useEffect(()=>{const sync=()=>{const key=location.hash.slice(1);setTab(["merch","evenements"].includes(key)?key:"lectures");};sync();window.addEventListener("hashchange",sync);return ()=>window.removeEventListener("hashchange",sync);},[]);
   const router = useRouter();
   const [loadingBook, setLoadingBook] = useState(false);
   const [loadingProd, setLoadingProd] = useState(false);
@@ -46,9 +52,10 @@ export default function AdminPage() {
   const [books, setBooks] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [originalStock, setOriginalStock] = useState<number | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [bookId, setBookId] = useState<string | null>(null);
 
   // Form states for Book
+  const [productId,setProductId]=useState<string|null>(null);
   const [bookTitle, setBookTitle] = useState("");
   const [bookAuthor, setBookAuthor] = useState("");
   const [bookMonth, setBookMonth] = useState("");
@@ -115,16 +122,18 @@ export default function AdminPage() {
       if (eventImageUploading) return;
       const starts_at = eventInstant(eventDate, eventTime);
       if (!starts_at) { setEventTimeError("Vérifie la date (JJ/MM/AAAA, par exemple 29/10/2026) et l’heure (19h30 ou 19:30, heure de Paris)."); return; }
-      data = { ...data, starts_at };
+      const config = tickets && {...tickets,questions:tickets.questions.map(q=>q.trim()).filter(Boolean)};
+      if (config && !validTickets(config)) { setEventTimeError("Vérifie la capacité, les tarifs (0,50 € minimum), les places et les questions."); return; }
+      data = { ...data, starts_at, ...(config || editingEventId && events.find(e=>e.id===editingEventId)?.ticketing ? {ticketing:config} : {}) };
       setEventTimeError("");
     }
     const res = await fetch("/api/admin", { method: id ? "PUT" : "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type, id, data, expectedStock: 0 }) });
     const result = await res.json();
     setMessage(res.ok ? "Enregistré !" : (type === "events" && /category/i.test(result.error || "") ? "La mise à jour des catégories doit être appliquée dans Supabase avant d’enregistrer cet événement." : result.error || "Erreur"));
-    if (res.ok) { setHistoryForm({ title: "", author: "", city: "Perpignan", month: "", rating: "", review: "", cover_url: "" }); setEventForm({ title: "", starts_at: "", city: "Perpignan", summary: "", action_url: "", image_url: "", category: "bookevents" }); setEditingEventId(null); setEventDate(""); setEventTime(""); setEventTimeError(""); fetchData(); }
+    if (res.ok) { setHistoryForm({ title: "", author: "", city: "Perpignan", month: "", rating: "", review: "", cover_url: "" }); setEventForm({ title: "", starts_at: "", city: "Perpignan", summary: "", action_url: "", image_url: "", category: "bookevents" }); setTickets(null); setEditingEventId(null); setEventDate(""); setEventTime(""); setEventTimeError(""); fetchData(); }
   };
 
-  const editEvent = (event: any) => { const fields = parisFields(event.starts_at); setEventDate(fields.date.split("-").reverse().join("/")); setEventTime(fields.time); setEventTimeError(""); setEditingEventId(event.id); setEventForm({ title: event.title, starts_at: event.starts_at, city: event.city, summary: event.summary || "", action_url: event.action_url || "", image_url: event.image_url || "", category: eventCategory(event.category) }); window.scrollTo({ top: 300, behavior: "smooth" }); };
+  const editEvent = (event: any) => { const fields = parisFields(event.starts_at); setEventDate(fields.date.split("-").reverse().join("/")); setEventTime(fields.time); setEventTimeError(""); setTickets(event.ticketing || null); setEditingEventId(event.id); setEventForm({ title: event.title, starts_at: event.starts_at, city: event.city, summary: event.summary || "", action_url: event.action_url || "", image_url: event.image_url || "", category: eventCategory(event.category) }); window.scrollTo({ top: 300, behavior: "smooth" }); };
 
   const createPromo = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,20 +153,18 @@ export default function AdminPage() {
   }, []);
 
   const handleLogout = async () => {
-    // We could call an API to clear the cookie, but for now simple redirect 
-    // since the middleware will block /admin if the cookie is gone or invalid.
-    document.cookie = "admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+    await fetch("/api/auth/logout",{method:"POST"});
     router.push("/login");
   };
 
   const resetBookForm = () => {
-    setEditingId(null);
+    setBookId(null);
     setBookTitle(""); setBookAuthor(""); setBookMonth(""); setBookCity("Perpignan"); setBookImage(null); setCurrentBookCover(""); setBookResume(""); setBookLink(""); setBookArchived(false); setBookRating(""); setBookReview("");
   };
 
   const resetProdForm = () => {
     setExtraPhotos([]); setNewPhotos([]); setComingSoon(false);
-    setEditingId(null);
+    setProductId(null);
     setProdName(""); setProdPrice(""); setProdStripePriceId(""); setProdDesc(""); setProdColors(""); setProdSizes(""); setProdStock(""); setProdImage(null); setCurrentProdImage("");
   };
 
@@ -180,20 +187,20 @@ export default function AdminPage() {
         imageUrl = uploadData.url;
       }
 
-      const method = editingId ? "PUT" : "POST";
+      const method = bookId ? "PUT" : "POST";
       const res = await fetch("/api/admin", {
         method: method,
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "lectures",
-          id: editingId,
+          id: bookId,
           data: { title: bookTitle, author: bookAuthor, month: bookMonth, city: bookCity, coverUrl: imageUrl, resume: bookResume, lien_place_des_libraires: bookLink, archived: bookArchived, rating: bookRating ? Number(bookRating) : null, review: bookReview || null }
         })
       });
 
       if (res.ok) {
-        setMessage(editingId ? "Lecture modifiée !" : "Lecture ajoutée !");
+        setMessage(bookId ? "Lecture modifiée !" : "Lecture ajoutée !");
         resetBookForm();
         fetchData();
       } else {
@@ -235,14 +242,14 @@ export default function AdminPage() {
         if (!response.ok) throw new Error(result.error || "Photo non enregistrée");
         images.push(result.url);
       }
-      const method = editingId ? "PUT" : "POST";
+      const method = productId ? "PUT" : "POST";
       const res = await fetch("/api/admin", {
         method: method,
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "merch",
-          id: editingId,
+          id: productId,
           expectedStock: originalStock,
           data: { 
             name: prodName, 
@@ -259,7 +266,7 @@ export default function AdminPage() {
       });
 
       if (res.ok) {
-        setMessage(editingId ? "Produit modifié !" : "Produit ajouté !");
+        setMessage(productId ? "Produit modifié !" : "Produit ajouté !");
         resetProdForm();
         fetchData();
       } else {
@@ -291,7 +298,7 @@ export default function AdminPage() {
   };
 
   const startEditBook = (book: any) => {
-    setEditingId(book.id);
+    setBookId(book.id);
     setBookTitle(book.title);
     setBookAuthor(book.author);
     setBookMonth(book.month);
@@ -306,7 +313,7 @@ export default function AdminPage() {
   const startEditProduct = (prod: any) => {
     setProdImage(null); setExtraPhotos(prod.images || []); setNewPhotos([]); setComingSoon(Boolean(prod.coming_soon));
     setOriginalStock(prod.stock);
-    setEditingId(prod.id);
+    setProductId(prod.id);
     setProdName(prod.name);
     setProdPrice(prod.price.toString());
     setProdStripePriceId(prod.stripe_price_id || "");
@@ -328,7 +335,6 @@ export default function AdminPage() {
             <span className="text-[10px] uppercase font-black tracking-[.4em]">Administration</span>
           </div>
           <h1 className="text-5xl font-serif text-bb-ink italic">Tableau de Bord</h1>
-          <a href="/admin/commandes" className="mt-3 inline-block text-sm font-bold text-bb-rose">Voir les commandes et précommandes →</a>
         </div>
         
         <div className="flex items-center gap-4">
@@ -373,15 +379,16 @@ export default function AdminPage() {
         </div>
       </FadeIn>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-10">
+      <nav aria-label="Rubriques de gestion" className="flex flex-wrap gap-1 border-b border-bb-beige">{[["lectures","LECTURES COMMUNES"],["merch","MERCH"],["evenements","ÉVÉNEMENTS"]].map(([key,label])=><a key={key} href={"#"+key} aria-current={tab===key?"page":undefined} className={`rounded-t-xl px-4 py-3 text-sm font-bold ${tab===key?"bg-bb-rose text-white":"bg-bb-beige/40"}`}>{label}</a>)}</nav>
+      {tab==="lectures" && <section className="space-y-8">
         {/* Formulaire Lectures */}
         <FadeIn delay={0.2} className="space-y-8 bg-white/40 backdrop-blur-sm p-10 rounded-[3rem] border border-bb-beige shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Book className="w-5 h-5 text-bb-rose" />
-              <h2 className="text-2xl font-serif italic text-bb-ink">{editingId ? "Modifier une Lecture" : "Ajouter une Lecture"}</h2>
+              <h2 className="text-2xl font-serif italic text-bb-ink">{bookId ? "Modifier une Lecture" : "Ajouter une Lecture"}</h2>
             </div>
-            {editingId && <button onClick={resetBookForm} className="text-[10px] uppercase font-black tracking-widest text-bb-ink/40 hover:text-bb-rose transition-colors">Annuler la modification</button>}
+            {bookId && <button onClick={resetBookForm} className="text-[10px] uppercase font-black tracking-widest text-bb-ink/40 hover:text-bb-rose transition-colors">Annuler la modification</button>}
           </div>
 
           <form onSubmit={handleAddOrEditBook} className="space-y-4">
@@ -407,75 +414,12 @@ export default function AdminPage() {
               </label>
             </div>
             <button disabled={loadingBook} className="w-full py-5 bg-bb-ink text-bb-cream rounded-full font-black uppercase tracking-[.3em] text-[10px] hover:bg-bb-rose transition-all shadow-xl active:scale-95 disabled:opacity-50">
-              {loadingBook ? "Chargement..." : (editingId ? "Enregistrer les modifications" : "Ajouter la Lecture")}
+              {loadingBook ? "Chargement..." : (bookId ? "Enregistrer les modifications" : "Ajouter la Lecture")}
             </button>
           </form>
         </FadeIn>
 
-        {/* Formulaire Boutique */}
-        <FadeIn delay={0.3} className="space-y-8 bg-white/40 backdrop-blur-sm p-10 rounded-[3rem] border border-bb-beige shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <ShoppingBag className="w-5 h-5 text-bb-rose" />
-              <h2 className="text-2xl font-serif italic text-bb-ink">{editingId ? "Modifier un Produit" : "Ajouter un Produit"}</h2>
-            </div>
-            {editingId && <button onClick={resetProdForm} className="text-[10px] uppercase font-black tracking-widest text-bb-ink/40 hover:text-bb-rose transition-colors">Annuler la modification</button>}
-          </div>
-
-          <form onSubmit={handleAddOrEditProduct} className="space-y-4">
-            <label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={comingSoon} onChange={e => setComingSoon(e.target.checked)} /> Bientôt disponible (visible, achat désactivé)</label>
-            <label className="block text-sm">Photos supplémentaires<input type="file" accept="image/*" multiple onChange={e => setNewPhotos(Array.from(e.target.files || []))} className="block w-full mt-2" /></label>
-            {extraPhotos.map((url, index) => <div key={url} className="flex items-center gap-3"><img src={url} alt={`Photo ${index + 2}`} className="h-16 w-16 object-cover rounded-lg" /><button type="button" onClick={() => setExtraPhotos(extraPhotos.filter((_, i) => i !== index))}>Retirer</button></div>)}
-
-            <input placeholder="Nom du produit" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodName} onChange={e => setProdName(e.target.value)} required />
-            <div className="grid grid-cols-2 gap-4">
-              <input type="number" placeholder="Prix (€)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodPrice} onChange={e => setProdPrice(e.target.value)} required />
-              <input type="number" placeholder="Stock (quantité)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodStock} onChange={e => setProdStock(e.target.value)} required />
-            </div>
-            <input placeholder="Stripe Price ID (ex: price_...)" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodStripePriceId} onChange={e => setProdStripePriceId(e.target.value)} />
-            <textarea placeholder="Description" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm min-h-[120px] font-medium text-sm resize-none" value={prodDesc} onChange={e => setProdDesc(e.target.value)} required />
-            <div className="grid grid-cols-2 gap-4">
-              <input placeholder="Couleurs (ex: Rose, Blanc)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodColors} onChange={e => setProdColors(e.target.value)} />
-              <input placeholder="Tailles (ex: S, M, L)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodSizes} onChange={e => setProdSizes(e.target.value)} />
-            </div>
-            <div className="relative">
-              <input type="file" className="hidden" id="prodImg" onChange={e => setProdImage(e.target.files?.[0] || null)} />
-              <label htmlFor="prodImg" className="w-full bg-white px-6 py-16 rounded-[2.5rem] border-2 border-dashed border-bb-beige flex flex-col items-center justify-center cursor-pointer hover:bg-bb-beige/10 transition-all group">
-                <Upload className="w-8 h-8 text-bb-ink/10 mb-4 group-hover:text-bb-rose/20 transition-colors" />
-                <span className="text-bb-ink/40 text-[10px] font-black uppercase tracking-[.25em]">{prodImage ? prodImage.name : (currentProdImage ? "Changer la photo" : "Uploader la photo")}</span>
-              </label>
-            </div>
-            <button disabled={loadingProd} className="w-full py-5 bg-bb-ink text-bb-cream rounded-full font-black uppercase tracking-[.3em] text-[10px] hover:bg-bb-rose transition-all shadow-xl active:scale-95 disabled:opacity-50">
-              {loadingProd ? "Upload en cours..." : (editingId ? "Enregistrer les modifications" : "Ajouter au Catalogue")}
-            </button>
-          </form>
-        </FadeIn>
-      </div>
-
-      <FadeIn delay={0.35} className="bg-white/40 backdrop-blur-sm p-10 rounded-[3rem] border border-bb-beige shadow-sm space-y-6">
-        <h2 className="text-2xl font-serif italic text-bb-ink">Codes promo</h2>
-        <form onSubmit={createPromo} className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <input placeholder="CODE10" value={promoForm.code} onChange={e => setPromoForm({ ...promoForm, code: e.target.value.toUpperCase() })} className="rounded-full border border-bb-beige bg-white px-5 py-3 text-sm" required />
-          <select value={promoForm.type} onChange={e => setPromoForm({ ...promoForm, type: e.target.value })} className="rounded-full border border-bb-beige bg-white px-5 py-3 text-sm"><option value="percent">Pourcentage</option><option value="amount">Montant (€)</option></select>
-          <input type="number" min="0.01" step="0.01" placeholder="Valeur" value={promoForm.value} onChange={e => setPromoForm({ ...promoForm, value: e.target.value })} className="rounded-full border border-bb-beige bg-white px-5 py-3 text-sm" required />
-          <button className="rounded-full bg-bb-ink px-5 py-3 text-[10px] font-black uppercase tracking-widest text-bb-cream">Créer</button>
-        </form>
-        <div className="space-y-2">{promos.map(p => <div key={p.id} className="flex items-center justify-between rounded-2xl bg-white/60 px-5 py-3 text-sm"><span className="font-bold">{p.code}</span><button onClick={() => disablePromo(p.id)} className="text-xs text-red-500">Désactiver</button></div>)}</div>
-      </FadeIn>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <FadeIn className="bg-white/40 p-8 rounded-[2.5rem] border border-bb-beige space-y-4"><h2 className="text-2xl font-serif italic">{editingEventId ? "Modifier un événement" : "Ajouter un événement"}</h2><label className="block text-sm">Catégorie<select value={eventForm.category} onChange={e => setEventForm({ ...eventForm, category: e.target.value })} className="admin-input">{eventCategories.map(category => <option key={category.value} value={category.value}>{category.label}</option>)}</select></label><input placeholder="Titre" value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} className="admin-input" required /><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><label className="block text-sm">Date (JJ/MM/AAAA)<input type="text" placeholder="29/10/2026" maxLength={10} value={eventDate} onChange={e => { setEventDate(e.target.value); setEventTimeError(""); }} aria-invalid={!!eventTimeError} aria-describedby="event-time-help" className="admin-input" required /></label><label className="block text-sm">Heure (Paris)<input type="text" placeholder="19h30" value={eventTime} onChange={e => { setEventTime(e.target.value); setEventTimeError(""); }} aria-invalid={!!eventTimeError} aria-describedby="event-time-help" className="admin-input" required /></label></div><p id="event-time-help" className="text-xs text-bb-ink/60">Date : 29/10/2026. Heure : 19h30 ou 19:30 (heure de Paris).</p>{eventTimeError && <p role="alert" className="text-sm text-red-700">{eventTimeError}</p>}<input placeholder="Ville" value={eventForm.city} onChange={e => setEventForm({ ...eventForm, city: e.target.value })} className="admin-input" required /><label className="block text-sm">Image de l’événement<input type="file" accept="image/jpeg,image/png,image/webp" disabled={eventImageUploading} onChange={e => { void uploadEventImage(e.target.files?.[0]); e.target.value = ""; }} className="admin-input" /></label><p className="text-xs text-bb-ink/60">JPG, PNG ou WebP · 4 Mo maximum. Enregistre l’événement après l’ajout.</p>{eventImageUploading && <p role="status">Envoi de l’image…</p>}{eventImageError && <p role="alert" className="text-sm text-red-700">{eventImageError}</p>}{eventForm.image_url && <div><img src={eventForm.image_url} alt="Aperçu de l’événement" className="max-h-48 rounded-2xl object-contain" /><button type="button" disabled={eventImageUploading} onClick={() => setEventForm({ ...eventForm, image_url: "" })} className="mt-2 text-xs text-bb-rose">Retirer l’image</button></div>}<textarea placeholder="Description complète" value={eventForm.summary} onChange={e => setEventForm({ ...eventForm, summary: e.target.value })} className="admin-input" /><input type="url" placeholder="Lien de la billetterie (ou Twitch)" value={eventForm.action_url} onChange={e => setEventForm({ ...eventForm, action_url: e.target.value })} className="admin-input" /><button disabled={eventImageUploading} onClick={() => addCommunityItem("events", eventForm, editingEventId)} className="admin-button">{editingEventId ? "Enregistrer" : "Ajouter l’événement"}</button>{editingEventId && <button disabled={eventImageUploading} onClick={() => { setEditingEventId(null); setEventDate(""); setEventTime(""); setEventTimeError(""); setEventForm({ title: "", starts_at: "", city: "Perpignan", summary: "", action_url: "", image_url: "", category: "bookevents" }); }} className="ml-3 text-xs text-bb-rose">Annuler</button>}<div className="border-t border-bb-beige pt-4 space-y-2">{events.map(event => <div key={event.id} className="flex justify-between text-sm"><span>{event.title}<span className="block text-xs text-bb-rose">{eventCategory(event.category) === "twitch" ? "Twitch Events" : "Bookevents"}</span></span><button disabled={eventImageUploading} onClick={() => editEvent(event)} className="text-bb-rose">Modifier</button></div>)}</div></FadeIn>
-      </div>
-
-      {/* Liste Contenu Actuel */}
-      <FadeIn delay={0.4} className="space-y-12 pb-20">
-        <div className="flex flex-col items-center gap-4">
-          <h2 className="text-3xl md:text-4xl font-serif text-bb-ink italic">Gestion des lectures et de la boutique</h2>
-          <div className="h-[1px] w-20 bg-bb-gold/40"></div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          {["Perpignan", "Montpellier"].map(city => {
+<div className="grid gap-8 md:grid-cols-2">          {["Perpignan", "Montpellier"].map(city => {
             const cityBooks = books.filter(book => book.city === city);
             const currentBooks = cityBooks.filter(book => !book.archived);
             const archivedBooks = cityBooks.filter(book => book.archived);
@@ -508,6 +452,46 @@ export default function AdminPage() {
             </section>;
           })}
 
+</div></section>}
+{tab==="merch" && <section className="space-y-8">          <a href="/admin/commandes" className="mt-3 inline-block text-sm font-bold text-bb-rose">Voir les commandes et précommandes →</a>
+        {/* Formulaire Boutique */}
+        <FadeIn delay={0.3} className="space-y-8 bg-white/40 backdrop-blur-sm p-10 rounded-[3rem] border border-bb-beige shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ShoppingBag className="w-5 h-5 text-bb-rose" />
+              <h2 className="text-2xl font-serif italic text-bb-ink">{productId ? "Modifier un Produit" : "Ajouter un Produit"}</h2>
+            </div>
+            {productId && <button onClick={resetProdForm} className="text-[10px] uppercase font-black tracking-widest text-bb-ink/40 hover:text-bb-rose transition-colors">Annuler la modification</button>}
+          </div>
+
+          <form onSubmit={handleAddOrEditProduct} className="space-y-4">
+            <label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={comingSoon} onChange={e => setComingSoon(e.target.checked)} /> Bientôt disponible (visible, achat désactivé)</label>
+            <label className="block text-sm">Photos supplémentaires<input type="file" accept="image/*" multiple onChange={e => setNewPhotos(Array.from(e.target.files || []))} className="block w-full mt-2" /></label>
+            {extraPhotos.map((url, index) => <div key={url} className="flex items-center gap-3"><img src={url} alt={`Photo ${index + 2}`} className="h-16 w-16 object-cover rounded-lg" /><button type="button" onClick={() => setExtraPhotos(extraPhotos.filter((_, i) => i !== index))}>Retirer</button></div>)}
+
+            <input placeholder="Nom du produit" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodName} onChange={e => setProdName(e.target.value)} required />
+            <div className="grid grid-cols-2 gap-4">
+              <input type="number" placeholder="Prix (€)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodPrice} onChange={e => setProdPrice(e.target.value)} required />
+              <input type="number" placeholder="Stock (quantité)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodStock} onChange={e => setProdStock(e.target.value)} required />
+            </div>
+            <input placeholder="Stripe Price ID (ex: price_...)" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodStripePriceId} onChange={e => setProdStripePriceId(e.target.value)} />
+            <textarea placeholder="Description" className="w-full bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm min-h-[120px] font-medium text-sm resize-none" value={prodDesc} onChange={e => setProdDesc(e.target.value)} required />
+            <div className="grid grid-cols-2 gap-4">
+              <input placeholder="Couleurs (ex: Rose, Blanc)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodColors} onChange={e => setProdColors(e.target.value)} />
+              <input placeholder="Tailles (ex: S, M, L)" className="bg-white px-8 py-5 rounded-3xl border border-bb-beige outline-none focus:border-bb-rose/30 shadow-sm font-medium text-sm" value={prodSizes} onChange={e => setProdSizes(e.target.value)} />
+            </div>
+            <div className="relative">
+              <input type="file" className="hidden" id="prodImg" onChange={e => setProdImage(e.target.files?.[0] || null)} />
+              <label htmlFor="prodImg" className="w-full bg-white px-6 py-16 rounded-[2.5rem] border-2 border-dashed border-bb-beige flex flex-col items-center justify-center cursor-pointer hover:bg-bb-beige/10 transition-all group">
+                <Upload className="w-8 h-8 text-bb-ink/10 mb-4 group-hover:text-bb-rose/20 transition-colors" />
+                <span className="text-bb-ink/40 text-[10px] font-black uppercase tracking-[.25em]">{prodImage ? prodImage.name : (currentProdImage ? "Changer la photo" : "Uploader la photo")}</span>
+              </label>
+            </div>
+            <button disabled={loadingProd} className="w-full py-5 bg-bb-ink text-bb-cream rounded-full font-black uppercase tracking-[.3em] text-[10px] hover:bg-bb-rose transition-all shadow-xl active:scale-95 disabled:opacity-50">
+              {loadingProd ? "Upload en cours..." : (productId ? "Enregistrer les modifications" : "Ajouter au Catalogue")}
+            </button>
+          </form>
+        </FadeIn>
           {/* Boutique */}
           <div className="space-y-8">
             <div className="flex items-center gap-3 pb-4 border-b border-bb-beige">
@@ -530,9 +514,18 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+          </div>      <FadeIn delay={0.35} className="bg-white/40 backdrop-blur-sm p-10 rounded-[3rem] border border-bb-beige shadow-sm space-y-6">
+        <h2 className="text-2xl font-serif italic text-bb-ink">Codes promo</h2>
+        <form onSubmit={createPromo} className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <input placeholder="CODE10" value={promoForm.code} onChange={e => setPromoForm({ ...promoForm, code: e.target.value.toUpperCase() })} className="rounded-full border border-bb-beige bg-white px-5 py-3 text-sm" required />
+          <select value={promoForm.type} onChange={e => setPromoForm({ ...promoForm, type: e.target.value })} className="rounded-full border border-bb-beige bg-white px-5 py-3 text-sm"><option value="percent">Pourcentage</option><option value="amount">Montant (€)</option></select>
+          <input type="number" min="0.01" step="0.01" placeholder="Valeur" value={promoForm.value} onChange={e => setPromoForm({ ...promoForm, value: e.target.value })} className="rounded-full border border-bb-beige bg-white px-5 py-3 text-sm" required />
+          <button className="rounded-full bg-bb-ink px-5 py-3 text-[10px] font-black uppercase tracking-widest text-bb-cream">Créer</button>
+        </form>
+        <div className="space-y-2">{promos.map(p => <div key={p.id} className="flex items-center justify-between rounded-2xl bg-white/60 px-5 py-3 text-sm"><span className="font-bold">{p.code}</span><button onClick={() => disablePromo(p.id)} className="text-xs text-red-500">Désactiver</button></div>)}</div>
       </FadeIn>
-    </div>
-  );
+
+</section>}
+{tab==="evenements" && <section>        <FadeIn className="bg-white/40 p-8 rounded-[2.5rem] border border-bb-beige space-y-4"><h2 className="text-2xl font-serif italic">{editingEventId ? "Modifier un événement" : "Ajouter un événement"}</h2><label className="block text-sm">Catégorie<select value={eventForm.category} onChange={e => setEventForm({ ...eventForm, category: e.target.value })} className="admin-input">{eventCategories.map(category => <option key={category.value} value={category.value}>{category.label}</option>)}</select></label><input placeholder="Titre" value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} className="admin-input" required /><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><label className="block text-sm">Date (JJ/MM/AAAA)<input type="text" placeholder="29/10/2026" maxLength={10} value={eventDate} onChange={e => { setEventDate(e.target.value); setEventTimeError(""); }} aria-invalid={!!eventTimeError} aria-describedby="event-time-help" className="admin-input" required /></label><label className="block text-sm">Heure (Paris)<input type="text" placeholder="19h30" value={eventTime} onChange={e => { setEventTime(e.target.value); setEventTimeError(""); }} aria-invalid={!!eventTimeError} aria-describedby="event-time-help" className="admin-input" required /></label></div><p id="event-time-help" className="text-xs text-bb-ink/60">Date : 29/10/2026. Heure : 19h30 ou 19:30 (heure de Paris).</p>{eventTimeError && <p role="alert" className="text-sm text-red-700">{eventTimeError}</p>}<input placeholder="Ville" value={eventForm.city} onChange={e => setEventForm({ ...eventForm, city: e.target.value })} className="admin-input" required /><label className="block text-sm">Image de l’événement<input type="file" accept="image/jpeg,image/png,image/webp" disabled={eventImageUploading} onChange={e => { void uploadEventImage(e.target.files?.[0]); e.target.value = ""; }} className="admin-input" /></label><p className="text-xs text-bb-ink/60">JPG, PNG ou WebP · 4 Mo maximum. Enregistre l’événement après l’ajout.</p>{eventImageUploading && <p role="status">Envoi de l’image…</p>}{eventImageError && <p role="alert" className="text-sm text-red-700">{eventImageError}</p>}{eventForm.image_url && <div><img src={eventForm.image_url} alt="Aperçu de l’événement" className="max-h-48 rounded-2xl object-contain" /><button type="button" disabled={eventImageUploading} onClick={() => setEventForm({ ...eventForm, image_url: "" })} className="mt-2 text-xs text-bb-rose">Retirer l’image</button></div>}<textarea placeholder="Description complète" value={eventForm.summary} onChange={e => setEventForm({ ...eventForm, summary: e.target.value })} className="admin-input" /><input type="url" placeholder="Lien de la billetterie (ou Twitch)" value={eventForm.action_url} onChange={e => setEventForm({ ...eventForm, action_url: e.target.value })} className="admin-input" /><TicketSettings key={editingEventId || "new"} value={tickets} change={setTickets}/><button disabled={eventImageUploading} onClick={() => addCommunityItem("events", eventForm, editingEventId)} className="admin-button">{editingEventId ? "Enregistrer" : "Ajouter l’événement"}</button>{editingEventId && <button disabled={eventImageUploading} onClick={() => { setTickets(null); setEditingEventId(null); setEventDate(""); setEventTime(""); setEventTimeError(""); setEventForm({ title: "", starts_at: "", city: "Perpignan", summary: "", action_url: "", image_url: "", category: "bookevents" }); }} className="ml-3 text-xs text-bb-rose">Annuler</button>}<div className="border-t border-bb-beige pt-4 space-y-2">{events.map(event => <div key={event.id} className="flex justify-between text-sm"><div>{event.title}{event.ticketing && <button className="ml-3 underline" onClick={()=>setParticipants(participants===event.id?"":event.id)}>Participants</button>}{participants===event.id && <Participants key={event.id} event={event.id}/>}<span className="block text-xs text-bb-rose">{eventCategory(event.category) === "twitch" ? "Twitch Events" : "Bookevents"}</span></div><button disabled={eventImageUploading} onClick={() => editEvent(event)} className="text-bb-rose">Modifier</button></div>)}</div></FadeIn></section>}
+</div>);
 }
