@@ -40,3 +40,10 @@
 .retreat button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
 @media(max-width: 900px) { .rooms { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media(max-width: 480px) { .rooms { grid-template-columns: 1fr; } }
+.field { display: grid; gap: .8rem; text-align: left; margin-top: 2rem; }
+.field input, .field textarea { width: 100%; min-width: 0; padding: 1rem; background: #fffaf7; border: 2px solid #80364b; border-radius: 16px; color: #2d2a26; font-size: 1rem; }
+.field input:focus-visible, .field textarea:focus-visible { outline: 3px solid #80364b; outline-offset: 4px; }
+.consent { display: flex; align-items: flex-start; gap: 1rem; text-align: left; margin-top: 2rem; }
+.consent input { margin-top: .4rem; flex-shrink: 0; width: 22px; height: 22px; accent-color: #80364b; }
+.summary { overflow-wrap: anywhere; }
+.preserved { white-space: pre-wrap; }
