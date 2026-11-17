@@ -1,7 +1,7 @@
 import RetreatParty from "./retreat-party";
 
-// Temporary demonstration capacity; no real inventory or reservations are used.
-const demoCapacity = 10;
+import { demoSeats } from "./demo-rooms";
+const demoCapacity = demoSeats.length;
 
 export default function ReservationPreview() {
   return <RetreatParty capacity={demoCapacity} />;
