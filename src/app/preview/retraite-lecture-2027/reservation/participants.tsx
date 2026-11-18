@@ -14,7 +14,7 @@ const questions = [
   { key: "email", title: "À quelle adresse peut-on t’écrire ?", label: "Adresse e-mail", type: "email", autocomplete: "email" },
   { key: "city", title: "De quelle ville viens-tu ?", label: "Ville", type: "text", autocomplete: "address-level2" },
   { key: "diet", title: "Une information pour les repas ?", label: "Allergies ou restrictions alimentaires (facultatif)", type: "text", autocomplete: "off" },
-  { key: "visible", title: "On t’affiche sur le plan des chambres ?", label: "Affichage sur le plan", type: "text", autocomplete: "off" },
+  { key: "visible", title: "On aide tes copines à te retrouver ? ♡", label: "Affichage sur le plan", type: "text", autocomplete: "off" },
 ] as const;
 
 export default function Participants({ seats, guests, onChange, onBack }: { seats: string[]; guests: Guests; onChange: (value: Guests) => void; onBack: () => void }) {
@@ -58,8 +58,9 @@ export default function Participants({ seats, guests, onChange, onBack }: { seat
       <p className={styles.hint}>{seat.room} · {seat.label}</p>
       <p className={styles.hint}>Démonstration privée : utilise des coordonnées fictives.</p>
       {question.key === "visible" ? <>
-        <label className={styles.consent}><input type="checkbox" checked={guest.visible} onChange={e => change("visible", e.target.checked)} /> Cette participante accepte l’affichage de son prénom, de l’initiale de son nom et de sa ville à son couchage, après confirmation de la réservation.</label>
-        <p className={styles.hint}>Facultatif. Sans son accord, la place affichera simplement « Place réservée ». Le nom complet et les coordonnées ne seront jamais affichés sur le plan.</p>
+        <p>Une copine ou une lectrice que tu connais vient aussi ? En apparaissant sur le plan, elle pourra te repérer et choisir une place près de toi, selon les disponibilités. De quoi préparer votre petit cocon de lecture ensemble ♡</p>
+        <label className={styles.consent}><input type="checkbox" checked={guest.visible} onChange={e => change("visible", e.target.checked)} /> {person === 0 ? "Oui, j’accepte que mon prénom, l’initiale de mon nom et ma ville apparaissent à mon couchage sur le plan, une fois ma réservation confirmée." : "Avec son accord, j’autorise l’affichage de son prénom, de l’initiale de son nom et de sa ville à son couchage, une fois sa réservation confirmée."}</label>
+        <p className={styles.hint}>Tu préfères rester discrète ? Aucun souci, c’est facultatif : sans accord, seule la mention « Place réservée » apparaîtra. Le nom complet et les coordonnées restent privés.</p>
       </> : <label className={styles.field}>{question.label}
         {question.key === "diet" ? <textarea rows={3} maxLength={1000} value={guest.diet} onChange={e => change("diet", e.target.value)} placeholder="Ex. : végétarienne, allergie aux noix…" /> : <input type={question.type} required maxLength={question.key === "email" ? 254 : 100} autoComplete={question.autocomplete} value={guest[question.key]} onChange={e => { e.target.setCustomValidity(""); change(question.key, e.target.value); }} onBlur={e => { const value = e.target.value.trim(); change(question.key, value); e.target.setCustomValidity(value ? "" : "Merci de remplir ce champ."); }} />}
       </label>}
