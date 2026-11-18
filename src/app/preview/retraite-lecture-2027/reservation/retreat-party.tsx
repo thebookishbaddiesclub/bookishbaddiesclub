@@ -123,7 +123,11 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
           <h2>Lit {index + 1} · {type === "double" ? "double partagé" : "individuel"}</h2>
           {demoSeats.filter(s => s.bedId === `${room.id}-${index}`).map(s => <button key={s.id} className={styles.seat} aria-pressed={seats.includes(s.id)} disabled={!seats.includes(s.id) && seats.length >= total} onClick={() => toggleSeat(s.id)}>{seats.includes(s.id) ? "✓ Sélectionnée" : "Place libre"} · {s.type === "double" ? s.label.split(", ")[1] : "1 personne"}</button>)}
         </div>)}</div>
-        <button className={styles.continue} onClick={() => setScreen("rooms")}>Revenir au plan des chambres</button>
+        {!complete && <p className={styles.hint} role="status">{seats.length < total ? `Choisis encore ${total - seats.length} place(s) pour continuer. Tu peux les choisir dans une autre chambre.` : "Choisissez les deux places du même lit double, ou revenez modifier votre préférence."}</p>}
+        <div className="flex flex-wrap items-center gap-4">
+          <button className={styles.continue} disabled={!complete} onClick={() => setScreen("done")}>Continuer vers le récapitulatif</button>
+          <button className={styles.back} onClick={() => setScreen("rooms")}>Choisir une autre chambre</button>
+        </div>
       </>}
       {screen === "done" && <div className={styles.center}>
         <div className={styles.summary}><Check aria-hidden="true" /><strong>{choices.find(c => c.id === party)?.title}</strong><span>{total} participante{total > 1 ? "s" : ""}</span><span>{preferences.find(p => p.id === sleep)?.title}</span>
