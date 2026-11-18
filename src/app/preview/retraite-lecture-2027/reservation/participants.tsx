@@ -14,7 +14,7 @@ const questions = [
   { key: "email", title: "À quelle adresse peut-on t’écrire ?", label: "Adresse e-mail", type: "email", autocomplete: "email" },
   { key: "city", title: "De quelle ville viens-tu ?", label: "Ville", type: "text", autocomplete: "address-level2" },
   { key: "diet", title: "Une information pour les repas ?", label: "Allergies ou restrictions alimentaires (facultatif)", type: "text", autocomplete: "off" },
-  { key: "visible", title: "On aide tes copines à te retrouver ? ♡", label: "Affichage sur le plan", type: "text", autocomplete: "off" },
+  { key: "visible", title: "On aide tes copines à te retrouver ?", label: "Affichage sur le plan", type: "text", autocomplete: "off" },
 ] as const;
 
 export default function Participants({ seats, guests, onChange, onBack, onContinue }: { seats: string[]; guests: Guests; onChange: (value: Guests) => void; onBack: () => void; onContinue: () => void }) {
@@ -40,7 +40,7 @@ export default function Participants({ seats, guests, onChange, onBack, onContin
   }
   return <div className={styles.screen}>
     <button className={styles.back} onClick={back}><ArrowLeft size={18} aria-hidden="true" /> Retour</button>
-    <h1 ref={heading} tabIndex={-1}>{finished ? "Tout est prêt pour la suite ♡" : question.title}</h1>
+    <h1 ref={heading} tabIndex={-1}>{finished ? "Tout est prêt pour la suite" : question.title}</h1>
     {finished ? <div className={styles.center}>
       <p>Voici les informations saisies dans cet aperçu.</p>
       {seats.map((id, index) => { const s = demoSeats.find(s => s.id === id)!; const g = guests[id]; return <div className={styles.summary} key={id}>
@@ -51,14 +51,14 @@ export default function Participants({ seats, guests, onChange, onBack, onContin
         <span><UserRound size={18} aria-hidden="true" /> Sur le plan après réservation : {g.visible ? `${g.first} ${Array.from(g.last)[0]}. · ${g.city}` : "Place réservée"}</span>
         <button className={styles.back} onClick={() => { setPosition(index * questions.length); setFinished(false); }}>Modifier ses informations</button>
       </div>; })}
-      <p className={styles.hint}>Aucune donnée n’a été envoyée ni enregistrée. Actualiser ou quitter la page efface cet essai. Utilise des coordonnées fictives.</p>
+      <p className={styles.hint}>Tes informations de test seront enregistrées seulement à la confirmation du paiement simulé. Utilise des coordonnées fictives.</p>
       <button className={styles.continue} onClick={onContinue}>Continuer vers le paiement simulé</button>
     </div> : <form key={position} className={styles.center} onSubmit={e => { e.preventDefault(); next(); }}>
       <p>Participante {person + 1} sur {seats.length} · Question {position % questions.length + 1} sur {questions.length}</p>
       <p className={styles.hint}>{seat.room} · {seat.label}</p>
       <p className={styles.hint}>Démonstration privée : utilise des coordonnées fictives.</p>
       {question.key === "visible" ? <>
-        <p>Une copine ou une lectrice que tu connais vient aussi ? En apparaissant sur le plan, elle pourra te repérer et choisir une place près de toi, selon les disponibilités. De quoi préparer votre petit cocon de lecture ensemble ♡</p>
+        <p>Une copine ou une lectrice que tu connais vient aussi ? En apparaissant sur le plan, elle pourra te repérer et choisir une place près de toi, selon les disponibilités. De quoi préparer votre petit cocon de lecture ensemble</p>
         <label className={styles.consent}><input type="checkbox" checked={guest.visible} onChange={e => change("visible", e.target.checked)} /> {person === 0 ? "Oui, j’accepte que mon prénom, l’initiale de mon nom et ma ville apparaissent à mon couchage sur le plan, une fois ma réservation confirmée." : "Avec son accord, j’autorise l’affichage de son prénom, de l’initiale de son nom et de sa ville à son couchage, une fois sa réservation confirmée."}</label>
         <p className={styles.hint}>Tu préfères rester discrète ? Aucun souci, c’est facultatif : sans accord, seule la mention « Place réservée » apparaîtra. Le nom complet et les coordonnées restent privés.</p>
       </> : <label className={styles.field}>{question.label}

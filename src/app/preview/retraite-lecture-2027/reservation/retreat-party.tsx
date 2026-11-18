@@ -8,6 +8,7 @@ import { demoRooms, demoSeats, sameDouble, type SleepPreference } from "./demo-r
 
 import Participants, { type Guests } from "./participants";
 
+import {groupCall,GroupLink,type GroupState} from "./group-client";
 import Payment from "./payment";
 
 type Party = "solo" | "duo" | "group";
@@ -18,6 +19,12 @@ const choices = [
 ];
 
 export default function RetreatParty({ capacity }: { capacity: number }) {
+  const [ownerSeat,setOwnerSeat]=useState("");
+  const [group,setGroup]=useState<GroupState|null>(null);
+  const [requestId,setRequestId]=useState(()=>crypto.randomUUID());
+  const [unavailable,setUnavailable]=useState<string[]>([]);
+  const [inventoryError,setInventoryError]=useState("");
+  useEffect(()=>{let live=true;async function sync(){try{const data=await groupCall({action:"inventory"});if(live){setUnavailable(data.unavailable);setInventoryError("");}}catch(e){if(live)setInventoryError(e instanceof Error?e.message:"Disponibilités indisponibles");}}void sync();const interval=setInterval(sync,5000);return()=>{live=false;clearInterval(interval);};},[]);
   const [guests, setGuests] = useState<Guests>({});
   const [party, setParty] = useState<Party | null>(null);
   const [count, setCount] = useState(3);
@@ -47,7 +54,7 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
     { id: "double" as const, title: "Un lit double partagé", subtitle: "Ça ne me dérange pas de partager un lit avec une autre Baddie.", icon: BedDouble },
     { id: "any" as const, title: "Peu importe !", subtitle: "Je suis flexible, je veux juste profiter du week-end.", icon: Sparkles },
   ];
-  const titles = { choice: "Tu viens avec qui ?", count: "Combien de Baddies serez-vous ?", sleep: "Comment préfères-tu dormir ?", share: "Vous souhaitez partager le même lit ?", rooms: "Le Plan des Chambres :", beds: room.name, payment: "Le paiement", participants: "Les participantes", done: "Voici votre sélection ♡" };
+  const titles = { choice: "Tu viens avec qui ?", count: "Combien de Baddies serez-vous ?", sleep: "Comment préfères-tu dormir ?", share: "Vous souhaitez partager le même lit ?", rooms: "Le Plan des Chambres :", beds: room.name, payment: "Le paiement", participants: "Les participantes", done: "Voici votre sélection" };
   function back() {
     setScreen(screen === "count" ? "choice" : screen === "sleep" ? (party === "group" ? "count" : "choice") : screen === "share" ? "sleep" : screen === "rooms" ? (party === "duo" && sleep !== "single" ? "share" : "sleep") : "rooms");
   }
@@ -59,21 +66,26 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
   function toggleSeat(id: string) {
     setSeats(current => current.includes(id) ? current.filter(s => s !== id) : current.length < total ? [...current, id] : current);
   }
-  const complete = seats.length === total && (!share || sameDouble(seats));
+  const complete = seats.length === total && (!share || sameDouble(seats)) && !seats.some(s=>unavailable.includes(s));
+  const own = seats.includes(ownerSeat)?ownerSeat:seats[0];
+  const mySeats = own?[own]:[];
+  async function confirm(cents:number,split:boolean){
+    const result=await groupCall({action:"start",requestId,seats,seat:own,guest:guests[own],cents,split});setGroup(result);
+  }
   return <section className={styles.retreat} aria-label="Aperçu de la réservation de la retraite">
     <div className={styles.topline}>
       <a href="/admin">← Retour à l’admin</a>
       <span>Aperçu privé · aucune réservation réelle</span>
     </div>
     <header className={styles.intro}>
-      <p>THE BOOKISH RETREAT · 2027</p>
+      <p>LE WEEK-END DES BADDIES · MOUNTAIN EDITION</p>
       <div className={styles.progress} aria-label={`Étape ${step} sur 6`}>
         {[1,2,3,4,5,6].map(n => <span key={n} className={n === step ? styles.activeDot : undefined} />)}
       </div>
       <small>Étape {step} · {step === 1 ? "Les participantes" : step === 2 ? "Le couchage" : step === 3 ? "Les chambres" : step === 4 ? "Le récapitulatif" : step === 5 ? "Les participantes" : "Le paiement"}</small>
     </header>
 
-    {screen === "payment" ? <Payment seats={seats} guests={guests} onBack={() => setScreen("participants")} /> : screen === "participants" ? <Participants seats={seats} guests={guests} onChange={setGuests} onBack={() => setScreen("done")} onContinue={() => setScreen("payment")} /> : <div key={screen} className={styles.screen}>
+    {screen === "payment" ? <Payment seats={mySeats} onConfirm={confirm} afterSuccess={group && total>1?<GroupLink group={group}/>:null} guests={guests} onBack={() => setScreen("participants")} /> : screen === "participants" ? <Participants seats={mySeats} guests={guests} onChange={setGuests} onBack={() => setScreen("done")} onContinue={() => setScreen("payment")} /> : <div key={screen} className={styles.screen}>
       {screen !== "choice" && <button className={styles.back} onClick={back}><ArrowLeft size={18} aria-hidden="true" /> Retour</button>}
       <h1 ref={heading} tabIndex={-1}>{titles[screen]}</h1>
 
@@ -101,18 +113,19 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
         {preferences.map(({id, title, subtitle, icon: Icon}) => <button key={id} className={`${styles.card} ${sleep === id ? styles.selected : ""}`} aria-pressed={sleep === id} onClick={() => selectSleep(id)}><Icon size={35} aria-hidden="true" /><strong>{title}</strong><span>{subtitle}</span></button>)}
       </div>}
       {screen === "share" && <div className={styles.cards}>
-        {[true, false].map(value => <button key={String(value)} className={`${styles.card} ${share === value ? styles.selected : ""}`} aria-pressed={share === value} onClick={() => { setShare(value); setScreen("rooms"); }}><BedDouble size={35} aria-hidden="true" /><strong>{value ? "Oui, ensemble ♡" : "Pas forcément"}</strong><span>{value ? "On choisira les deux places du même lit double." : "On choisira nos places librement."}</span></button>)}
+        {[true, false].map(value => <button key={String(value)} className={`${styles.card} ${share === value ? styles.selected : ""}`} aria-pressed={share === value} onClick={() => { setShare(value); setScreen("rooms"); }}><BedDouble size={35} aria-hidden="true" /><strong>{value ? "Oui, ensemble" : "Pas forcément"}</strong><span>{value ? "On choisira les deux places du même lit double." : "On choisira nos places librement."}</span></button>)}
       </div>}
+      {inventoryError && <p role="status" className={styles.hint}>{inventoryError}</p>}
       {(screen === "rooms" || screen === "beds") && <>
-        <p className={styles.hint}>Chalet Husky · configuration provisoire de démonstration. Toutes les places sont libres.</p>
+        <p className={styles.hint}>Chalet Husky · configuration provisoire de démonstration. Les disponibilités de test se mettent à jour automatiquement.</p>
         <p role="status">{seats.length} / {total} place{total > 1 ? "s" : ""} sélectionnée{seats.length > 1 ? "s" : ""}</p>
         {share && <p className={styles.hint}>Votre souhait : les deux places du même lit double.</p>}
       </>}
       {screen === "rooms" && <>
         <div className={styles.rooms}>{demoRooms.filter(r => r.beds.length > 0).map(r => <button key={r.id} disabled={r.beds.length === 0} className={styles.card} onClick={() => { setRoomId(r.id); setScreen("beds"); }}>
           <strong>{r.name}</strong><div className={styles.bedIcons}>{r.beds.map((type,i) => type === "double" ? <BedDouble key={i} aria-label="Lit double" /> : <BedSingle key={i} aria-label="Lit individuel" />)}</div>
-          <span>{r.beds.length === 0 ? "Réservée à l’organisatrice" : `${demoSeats.filter(s => s.roomId === r.id).length} places disponibles`}</span>
-          {r.beds.length > 0 && (sleep === "any" || r.beds.some(b => b === sleep)) && <span>♡ Selon ta préférence</span>}
+          <span>{r.beds.length === 0 ? "Réservée à l’organisatrice" : `${demoSeats.filter(s => s.roomId === r.id && !unavailable.includes(s.id)).length} places disponibles`}</span>
+          {r.beds.length > 0 && (sleep === "any" || r.beds.some(b => b === sleep)) && <span>Selon ta préférence</span>}
           {seats.some(id => demoSeats.find(s => s.id === id)?.roomId === r.id) && <span>✓ Des places choisies ici</span>}
         </button>)}</div>
         {share && seats.length === total && !sameDouble(seats) && <p role="status">Choisissez les deux places d’un même lit double, ou revenez modifier votre préférence.</p>}
@@ -123,7 +136,7 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
         <div className={styles.rooms}>{room.beds.map((type, index) => <div key={index} className={styles.bed}>
           {type === "double" ? <BedDouble size={36} aria-hidden="true" /> : <BedSingle size={36} aria-hidden="true" />}
           <h2>Lit {index + 1} · {type === "double" ? "double partagé" : "individuel"}</h2>
-          {demoSeats.filter(s => s.bedId === `${room.id}-${index}`).map(s => <button key={s.id} className={styles.seat} aria-pressed={seats.includes(s.id)} disabled={!seats.includes(s.id) && seats.length >= total} onClick={() => toggleSeat(s.id)}>{seats.includes(s.id) ? "✓ Sélectionnée" : "Place libre"} · {s.type === "double" ? s.label.split(", ")[1] : "1 personne"}</button>)}
+          {demoSeats.filter(s => s.bedId === `${room.id}-${index}`).map(s => <button key={s.id} className={styles.seat} aria-pressed={seats.includes(s.id)} disabled={unavailable.includes(s.id)||(!seats.includes(s.id) && seats.length >= total)} onClick={() => toggleSeat(s.id)}>{unavailable.includes(s.id)?"Indisponible":seats.includes(s.id) ? "✓ Sélectionnée" : "Place libre"} · {s.type === "double" ? s.label.split(", ")[1] : "1 personne"}</button>)}
         </div>)}</div>
         {!complete && <p className={styles.hint} role="status">{seats.length < total ? `Choisis encore ${total - seats.length} place(s) pour continuer. Tu peux les choisir dans une autre chambre.` : "Choisissez les deux places du même lit double, ou revenez modifier votre préférence."}</p>}
         <div className="flex flex-wrap items-center gap-4">
@@ -135,8 +148,9 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
         <div className={styles.summary}><Check aria-hidden="true" /><strong>{choices.find(c => c.id === party)?.title}</strong><span>{total} participante{total > 1 ? "s" : ""}</span><span>{preferences.find(p => p.id === sleep)?.title}</span>
           {demoSeats.filter(s => seats.includes(s.id)).map(s => <span key={s.id}>{s.room} · {s.label}</span>)}
         </div>
-        <p>Aucune place n’est réservée : ceci est une simulation.</p>
-        <button className={styles.continue} onClick={() => setScreen("participants")}>Renseigner les participantes</button>
+        <p>Tu règles uniquement ta place. Après ton premier paiement simulé, les places choisies pour tes copines seront gardées une heure. Chacune utilisera le lien privé pour renseigner ses informations et payer individuellement.</p>
+        {total>1 && <label className={styles.field}>Quelle est ta place ?<select value={own} onChange={e=>{setOwnerSeat(e.target.value);setRequestId(crypto.randomUUID());}}>{seats.map(id=>{const s=demoSeats.find(s=>s.id===id)!;return <option key={id} value={id}>{s.room} · {s.label}</option>;})}</select></label>}
+        <button className={styles.continue} onClick={() => setScreen("participants")}>Renseigner mes informations</button>
         <button className={styles.continue} onClick={() => setScreen("rooms")}>Modifier les couchages</button>
       </div>}
     </div>}

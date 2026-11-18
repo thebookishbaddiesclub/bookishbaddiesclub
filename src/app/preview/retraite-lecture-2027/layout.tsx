@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { validSession } from "@/lib/admin-session";
 
 export const metadata: Metadata = {
-  title: "The Bookish Retreat · Aperçu privé",
+  title: "Le Week-end des Baddies — Mountain Edition · Aperçu privé",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";
