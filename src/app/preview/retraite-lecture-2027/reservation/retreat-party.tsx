@@ -117,7 +117,7 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
       </div>}
       {inventoryError && <p role="status" className={styles.hint}>{inventoryError}</p>}
       {(screen === "rooms" || screen === "beds") && <>
-        <p className={styles.hint}>Chalet Husky · configuration provisoire de démonstration. Les disponibilités de test se mettent à jour automatiquement.</p>
+        <p className={styles.hint}>Le chalet à Bolquère · plan de démonstration. Les disponibilités de test se mettent à jour automatiquement.</p>
         <p role="status">{seats.length} / {total} place{total > 1 ? "s" : ""} sélectionnée{seats.length > 1 ? "s" : ""}</p>
         {share && <p className={styles.hint}>Votre souhait : les deux places du même lit double.</p>}
       </>}

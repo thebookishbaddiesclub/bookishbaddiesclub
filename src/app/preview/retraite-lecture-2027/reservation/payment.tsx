@@ -40,7 +40,7 @@ export default function Payment({seats,guests,onBack,onConfirm,afterSuccess}:{se
     <h1 ref={heading} tabIndex={-1}>{status === "success" ? "Tu fais partie du Week-end des Baddies ❤️‍🔥" : "Ta petite place est presque réservée"}</h1>
     <p className={styles.hint}>Simulation uniquement · aucun débit réel ni e-mail. Les blocages concernent uniquement les places de test.</p>
     {status === "success" ? <div className={styles.center}>
-      <div className={styles.summary}><Check size={32} aria-hidden="true" /><strong>Réservation simulée avec succès</strong><span>Le Week-end des Baddies — Mountain Edition · du 12 au 14 mars 2027</span><small>Dates et logement provisoires</small><span>Premier paiement simulé : {euros(amounts[0])}</span><span>Montant réellement débité : 0 €</span><span>Total du séjour : {euros(total)}</span></div>
+      <div className={styles.summary}><Check size={32} aria-hidden="true" /><strong>Réservation simulée avec succès</strong><span>Le Week-end des Baddies — Mountain Edition · du 12 au 14 mars 2027</span><small>Bolquère · l’adresse exacte sera envoyée par e-mail aux participantes.</small><span>Premier paiement simulé : {euros(amounts[0])}</span><span>Montant réellement débité : 0 €</span><span>Total du séjour : {euros(total)}</span></div>
       {seats.map(id=>{const s=demoSeats.find(s=>s.id===id)!;const g=guests[id];return <p key={id}>{g.first} · {s.room} · {s.label}</p>;})}
       {payingSplit && <div className={styles.summary}><strong>Échéances restantes — simulation</strong><span>{date(1)} : {euros(amounts[1])}</span><span>{date(2)} : {euros(amounts[2])}</span></div>}
       <p>Les détails du week-end et les informations pratiques seront communiqués avant le séjour.</p>
