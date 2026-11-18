@@ -8,6 +8,8 @@ import { demoRooms, demoSeats, sameDouble, type SleepPreference } from "./demo-r
 
 import Participants, { type Guests } from "./participants";
 
+import Payment from "./payment";
+
 type Party = "solo" | "duo" | "group";
 const choices = [
   { id: "solo" as const, title: "Seule", subtitle: "", icon: UserRound },
@@ -19,7 +21,7 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
   const [guests, setGuests] = useState<Guests>({});
   const [party, setParty] = useState<Party | null>(null);
   const [count, setCount] = useState(3);
-  const [screen, setScreen] = useState<"choice" | "count" | "sleep" | "share" | "rooms" | "beds" | "done" | "participants">("choice");
+  const [screen, setScreen] = useState<"choice" | "count" | "sleep" | "share" | "rooms" | "beds" | "done" | "participants" | "payment">("choice");
   const [sleep, setSleep] = useState<SleepPreference | null>(null);
   const [share, setShare] = useState<boolean | null>(null);
   const [roomId, setRoomId] = useState<string>("1");
@@ -39,13 +41,13 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
   }
 
   const room = demoRooms.find(r => r.id === roomId)!;
-  const step = screen === "participants" ? 5 : screen === "choice" || screen === "count" ? 1 : screen === "sleep" || screen === "share" ? 2 : screen === "done" ? 4 : 3;
+  const step = screen === "payment" ? 6 : screen === "participants" ? 5 : screen === "choice" || screen === "count" ? 1 : screen === "sleep" || screen === "share" ? 2 : screen === "done" ? 4 : 3;
   const preferences = [
     { id: "single" as const, title: "Mon propre lit", subtitle: "Je préfère un couchage individuel.", icon: BedSingle },
     { id: "double" as const, title: "Un lit double partagé", subtitle: "Ça ne me dérange pas de partager un lit avec une autre Baddie.", icon: BedDouble },
     { id: "any" as const, title: "Peu importe !", subtitle: "Je suis flexible, je veux juste profiter du week-end.", icon: Sparkles },
   ];
-  const titles = { choice: "Tu viens avec qui ?", count: "Combien de Baddies serez-vous ?", sleep: "Comment préfères-tu dormir ?", share: "Vous souhaitez partager le même lit ?", rooms: "Le Plan des Chambres :", beds: room.name, participants: "Les participantes", done: "Voici votre sélection ♡" };
+  const titles = { choice: "Tu viens avec qui ?", count: "Combien de Baddies serez-vous ?", sleep: "Comment préfères-tu dormir ?", share: "Vous souhaitez partager le même lit ?", rooms: "Le Plan des Chambres :", beds: room.name, payment: "Le paiement", participants: "Les participantes", done: "Voici votre sélection ♡" };
   function back() {
     setScreen(screen === "count" ? "choice" : screen === "sleep" ? (party === "group" ? "count" : "choice") : screen === "share" ? "sleep" : screen === "rooms" ? (party === "duo" && sleep !== "single" ? "share" : "sleep") : "rooms");
   }
@@ -68,10 +70,10 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
       <div className={styles.progress} aria-label={`Étape ${step} sur 6`}>
         {[1,2,3,4,5,6].map(n => <span key={n} className={n === step ? styles.activeDot : undefined} />)}
       </div>
-      <small>Étape {step} · {step === 1 ? "Les participantes" : step === 2 ? "Le couchage" : step === 3 ? "Les chambres" : step === 4 ? "Le récapitulatif" : "Les participantes"}</small>
+      <small>Étape {step} · {step === 1 ? "Les participantes" : step === 2 ? "Le couchage" : step === 3 ? "Les chambres" : step === 4 ? "Le récapitulatif" : step === 5 ? "Les participantes" : "Le paiement"}</small>
     </header>
 
-    {screen === "participants" ? <Participants seats={seats} guests={guests} onChange={setGuests} onBack={() => setScreen("done")} /> : <div key={screen} className={styles.screen}>
+    {screen === "payment" ? <Payment seats={seats} guests={guests} onBack={() => setScreen("participants")} /> : screen === "participants" ? <Participants seats={seats} guests={guests} onChange={setGuests} onBack={() => setScreen("done")} onContinue={() => setScreen("payment")} /> : <div key={screen} className={styles.screen}>
       {screen !== "choice" && <button className={styles.back} onClick={back}><ArrowLeft size={18} aria-hidden="true" /> Retour</button>}
       <h1 ref={heading} tabIndex={-1}>{titles[screen]}</h1>
 

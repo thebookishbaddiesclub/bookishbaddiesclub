@@ -47,3 +47,6 @@
 .consent input { margin-top: .4rem; flex-shrink: 0; width: 22px; height: 22px; accent-color: #80364b; }
 .summary { overflow-wrap: anywhere; }
 .preserved { white-space: pre-wrap; }
+.field select { max-width: 100%; padding: 1rem; border: 2px solid #80364b; border-radius: 16px; background: #fffaf7; font-size: 1rem; }
+.testActions { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; margin-top: 1.5rem; font-size: .85rem; }
+.testActions button { text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }

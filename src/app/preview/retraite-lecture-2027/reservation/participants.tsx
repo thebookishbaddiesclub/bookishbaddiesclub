@@ -17,7 +17,7 @@ const questions = [
   { key: "visible", title: "On aide tes copines à te retrouver ? ♡", label: "Affichage sur le plan", type: "text", autocomplete: "off" },
 ] as const;
 
-export default function Participants({ seats, guests, onChange, onBack }: { seats: string[]; guests: Guests; onChange: (value: Guests) => void; onBack: () => void }) {
+export default function Participants({ seats, guests, onChange, onBack, onContinue }: { seats: string[]; guests: Guests; onChange: (value: Guests) => void; onBack: () => void; onContinue: () => void }) {
   const [position, setPosition] = useState(0);
   const [finished, setFinished] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -52,7 +52,7 @@ export default function Participants({ seats, guests, onChange, onBack }: { seat
         <button className={styles.back} onClick={() => { setPosition(index * questions.length); setFinished(false); }}>Modifier ses informations</button>
       </div>; })}
       <p className={styles.hint}>Aucune donnée n’a été envoyée ni enregistrée. Actualiser ou quitter la page efface cet essai. Utilise des coordonnées fictives.</p>
-      <p>Prochaine étape : le paiement simulé. Les conditions de réservation seront présentées avant cette étape, une fois définies.</p>
+      <button className={styles.continue} onClick={onContinue}>Continuer vers le paiement simulé</button>
     </div> : <form key={position} className={styles.center} onSubmit={e => { e.preventDefault(); next(); }}>
       <p>Participante {person + 1} sur {seats.length} · Question {position % questions.length + 1} sur {questions.length}</p>
       <p className={styles.hint}>{seat.room} · {seat.label}</p>
