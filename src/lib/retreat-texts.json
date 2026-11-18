@@ -1,0 +1,566 @@
+[
+  {
+    "id": "reserve-label",
+    "group": "Boutons",
+    "label": "Texte du bouton de réservation",
+    "value": "Je réserve ma place"
+  },
+  {
+    "id": "text-001",
+    "group": "Activités",
+    "label": "Des lectures qui débordent",
+    "value": "Des lectures qui débordent"
+  },
+  {
+    "id": "text-002",
+    "group": "Activités",
+    "label": "Un plaid, quelques pages, puis une discussion qui part sur ton dernier c…",
+    "value": "Un plaid, quelques pages, puis une discussion qui part sur ton dernier coup de cœur. Apporte les livres qui te font envie : ici, on lit à son rythme."
+  },
+  {
+    "id": "text-003",
+    "group": "Activités",
+    "label": "Les mains dans la création",
+    "value": "Les mains dans la création"
+  },
+  {
+    "id": "text-004",
+    "group": "Activités",
+    "label": "Des activités créatives pour tester de nouvelles idées, papoter et fabri…",
+    "value": "Des activités créatives pour tester de nouvelles idées, papoter et fabriquer un souvenir du week-end. Le détail des ateliers sera dévoilé plus tard 👀"
+  },
+  {
+    "id": "text-005",
+    "group": "Activités",
+    "label": "Un peu d’air frais",
+    "value": "Un peu d’air frais"
+  },
+  {
+    "id": "text-006",
+    "group": "Activités",
+    "label": "Une balade pour profiter de la montagne et prendre le temps de regarder …",
+    "value": "Une balade pour profiter de la montagne et prendre le temps de regarder autour de nous, selon la météo et les envies du groupe."
+  },
+  {
+    "id": "text-007",
+    "group": "Activités",
+    "label": "À table, les Baddies !",
+    "value": "À table, les Baddies !"
+  },
+  {
+    "id": "text-008",
+    "group": "Activités",
+    "label": "Des repas partagés, de bonnes choses à grignoter et des conversations qu…",
+    "value": "Des repas partagés, de bonnes choses à grignoter et des conversations qui traînent. Les pauses gourmandes font aussi partie du programme."
+  },
+  {
+    "id": "text-009",
+    "group": "Activités",
+    "label": "Du temps pour toi, des moments avec elles",
+    "value": "Du temps pour toi, des moments avec elles"
+  },
+  {
+    "id": "text-010",
+    "group": "Activités",
+    "label": "Bouquiner dans un coin, discuter sur le canapé ou ne rien prévoir du tou…",
+    "value": "Bouquiner dans un coin, discuter sur le canapé ou ne rien prévoir du tout. Pas besoin de remplir chaque minute pour passer un bon week-end 🫶"
+  },
+  {
+    "id": "text-011",
+    "group": "Questions fréquentes",
+    "label": "Je peux venir seule ?",
+    "value": "Je peux venir seule ?"
+  },
+  {
+    "id": "text-012",
+    "group": "Questions fréquentes",
+    "label": "Bien sûr Le week-end est aussi pensé pour faire connaissance avec d’autr…",
+    "value": "Bien sûr Le week-end est aussi pensé pour faire connaissance avec d’autres lectrices. Tu peux venir sans connaître personne et partager des moments autour des livres."
+  },
+  {
+    "id": "text-013",
+    "group": "Questions fréquentes",
+    "label": "Et avec les copines ?",
+    "value": "Et avec les copines ?"
+  },
+  {
+    "id": "text-014",
+    "group": "Questions fréquentes",
+    "label": "Choisis vos places et règle uniquement la tienne. Dès la confirmation de…",
+    "value": "Choisis vos places et règle uniquement la tienne. Dès la confirmation de ton premier paiement, les autres places du groupe sont gardées une heure. Tu partages le lien privé : chacune renseigne ses informations et paie sa place, en une ou trois fois selon la date. Le compte à rebours est commun. À la fin du délai, seules les places non payées sont libérées."
+  },
+  {
+    "id": "text-015",
+    "group": "Questions fréquentes",
+    "label": "Comment fonctionnent les chambres ?",
+    "value": "Comment fonctionnent les chambres ?"
+  },
+  {
+    "id": "text-016",
+    "group": "Questions fréquentes",
+    "label": "Les chambres sont partagées. Tu choisis une place précise sur le plan. L…",
+    "value": "Les chambres sont partagées. Tu choisis une place précise sur le plan. La répartition reste provisoire et pourra être ajustée avec les participantes concernées."
+  },
+  {
+    "id": "text-017",
+    "group": "Questions fréquentes",
+    "label": "Est-ce que je dois partager un lit ?",
+    "value": "Est-ce que je dois partager un lit ?"
+  },
+  {
+    "id": "text-018",
+    "group": "Questions fréquentes",
+    "label": "Il y a des lits individuels et des lits doubles partagés. Tu indiques ta…",
+    "value": "Il y a des lits individuels et des lits doubles partagés. Tu indiques ta préférence, puis tu choisis parmi les couchages disponibles. Chaque lit double comporte deux places distinctes."
+  },
+  {
+    "id": "text-019",
+    "group": "Questions fréquentes",
+    "label": "Peut-on payer en plusieurs fois ?",
+    "value": "Peut-on payer en plusieurs fois ?"
+  },
+  {
+    "id": "text-020",
+    "group": "Questions fréquentes",
+    "label": "Le paiement en trois fois sans frais est prévu, sous réserve de sa confi…",
+    "value": "Le paiement en trois fois sans frais est prévu, sous réserve de sa configuration définitive. Dans la simulation : premier règlement à la réservation, deuxième à mi-chemin et dernier le 1er février 2027. L’option est proposée jusqu’au 30 janvier inclus, puis le règlement est en une fois."
+  },
+  {
+    "id": "text-021",
+    "group": "Questions fréquentes",
+    "label": "Quelles sont les conditions d’annulation ?",
+    "value": "Quelles sont les conditions d’annulation ?"
+  },
+  {
+    "id": "text-022",
+    "group": "Questions fréquentes",
+    "label": "Elles sont encore en cours de préparation. Elles seront affichées ici et…",
+    "value": "Elles sont encore en cours de préparation. Elles seront affichées ici et présentées avant tout paiement réel. Aucune réservation réelle n’est ouverte dans cet aperçu."
+  },
+  {
+    "id": "text-023",
+    "group": "Questions fréquentes",
+    "label": "Comment se déroule le week-end ?",
+    "value": "Comment se déroule le week-end ?"
+  },
+  {
+    "id": "text-024",
+    "group": "Questions fréquentes",
+    "label": "On alterne lecture, ateliers, repas partagés et temps libre. Pas de plan…",
+    "value": "On alterne lecture, ateliers, repas partagés et temps libre. Pas de planning à la minute : on profite du chalet et de ces moments ensemble, à son rythme. Les activités et les balades pourront évoluer selon la météo et l’organisation."
+  },
+  {
+    "id": "text-025",
+    "group": "Accueil",
+    "label": "En partenariat avec les éditions Olympe",
+    "value": "En partenariat avec les éditions Olympe"
+  },
+  {
+    "id": "text-026",
+    "group": "Accueil",
+    "label": "Le Week-end",
+    "value": "Le Week-end"
+  },
+  {
+    "id": "text-027",
+    "group": "Accueil",
+    "label": "des Baddies",
+    "value": "des Baddies"
+  },
+  {
+    "id": "text-028",
+    "group": "Accueil",
+    "label": "Mountain Edition",
+    "value": "Mountain Edition"
+  },
+  {
+    "id": "text-029",
+    "group": "Accueil",
+    "label": "Un week-end à la montagne,",
+    "value": "Un week-end à la montagne,"
+  },
+  {
+    "id": "text-030",
+    "group": "Accueil",
+    "label": "des livres et des Baddies.",
+    "value": "des livres et des Baddies."
+  },
+  {
+    "id": "text-031",
+    "group": "Accueil",
+    "label": "12 — 14 mars 2027",
+    "value": "12 — 14 mars 2027"
+  },
+  {
+    "id": "text-032",
+    "group": "Accueil",
+    "label": "Bolquère · Pyrénées-Orientales",
+    "value": "Bolquère · Pyrénées-Orientales"
+  },
+  {
+    "id": "text-033",
+    "group": "Accueil",
+    "label": "À partir de 225 €",
+    "value": "À partir de 225 €"
+  },
+  {
+    "id": "text-034",
+    "group": "Accueil",
+    "label": "Un roman à paraître en 2027, des goodies et des activités pour plonger e…",
+    "value": "Un roman à paraître en 2027, des goodies et des activités pour plonger ensemble dans son univers 👀"
+  },
+  {
+    "id": "text-035",
+    "group": "Accueil",
+    "label": "L’adresse exacte sera envoyée par e-mail aux participantes. Paiement en …",
+    "value": "L’adresse exacte sera envoyée par e-mail aux participantes. Paiement en 3 fois prévu, sous réserve de configuration."
+  },
+  {
+    "id": "text-036",
+    "group": "Accueil",
+    "label": "ÉDITIONS OLYMPE",
+    "value": "ÉDITIONS OLYMPE"
+  },
+  {
+    "id": "text-037",
+    "group": "Partenariat Olympe",
+    "label": "Bookish Baddies × Olympe",
+    "value": "Bookish Baddies × Olympe"
+  },
+  {
+    "id": "text-038",
+    "group": "Partenariat Olympe",
+    "label": "Un week-end.",
+    "value": "Un week-end."
+  },
+  {
+    "id": "text-039",
+    "group": "Partenariat Olympe",
+    "label": "Tout un univers à découvrir.",
+    "value": "Tout un univers à découvrir."
+  },
+  {
+    "id": "text-040",
+    "group": "Partenariat Olympe",
+    "label": "Cette Mountain Edition se vit en partenariat avec la maison d’édition ",
+    "value": "Cette Mountain Edition se vit en partenariat avec la maison d’édition "
+  },
+  {
+    "id": "text-041",
+    "group": "Partenariat Olympe",
+    "label": "Olympe",
+    "value": "Olympe"
+  },
+  {
+    "id": "text-042",
+    "group": "Partenariat Olympe",
+    "label": ". Ensemble, on découvrira l’un de leurs romans à paraître en 2027, et on…",
+    "value": ". Ensemble, on découvrira l’un de leurs romans à paraître en 2027, et on lui fera une vraie place dans notre week-end ❤️‍🔥"
+  },
+  {
+    "id": "text-043",
+    "group": "Partenariat Olympe",
+    "label": "Des livres, des goodies et des activités autour de l’univers du roman : …",
+    "value": "Des livres, des goodies et des activités autour de l’univers du roman : de quoi lire, échanger nos théories et prolonger l’histoire bien au-delà des pages."
+  },
+  {
+    "id": "text-044",
+    "group": "Partenariat Olympe",
+    "label": "Le titre et les détails de cette découverte seront dévoilés prochainemen…",
+    "value": "Le titre et les détails de cette découverte seront dévoilés prochainement. On vous garde encore quelques surprises 👀"
+  },
+  {
+    "id": "text-045",
+    "group": "Présentation du week-end",
+    "label": "Le temps d’un week-end",
+    "value": "Le temps d’un week-end"
+  },
+  {
+    "id": "text-046",
+    "group": "Présentation du week-end",
+    "label": "Des livres. Un chalet.",
+    "value": "Des livres. Un chalet."
+  },
+  {
+    "id": "text-047",
+    "group": "Présentation du week-end",
+    "label": "Et nous.",
+    "value": "Et nous."
+  },
+  {
+    "id": "text-048",
+    "group": "Présentation du week-end",
+    "label": "Imagine : ton livre du moment, un coin cosy et des lectrices avec qui en…",
+    "value": "Imagine : ton livre du moment, un coin cosy et des lectrices avec qui en parler pendant des heures. Une parenthèse intimiste à la montagne, pour ralentir, créer et se rencontrer."
+  },
+  {
+    "id": "text-049",
+    "group": "Présentation du week-end",
+    "label": "Lire, tout simplement",
+    "value": "Lire, tout simplement"
+  },
+  {
+    "id": "text-050",
+    "group": "Présentation du week-end",
+    "label": "Des reading times et du temps libre pour avancer à ton rythme.",
+    "value": "Des reading times et du temps libre pour avancer à ton rythme."
+  },
+  {
+    "id": "text-051",
+    "group": "Présentation du week-end",
+    "label": "Se rencontrer",
+    "value": "Se rencontrer"
+  },
+  {
+    "id": "text-052",
+    "group": "Présentation du week-end",
+    "label": "Des repas partagés et des conversations qui commencent par « tu lis quoi…",
+    "value": "Des repas partagés et des conversations qui commencent par « tu lis quoi ? »."
+  },
+  {
+    "id": "text-053",
+    "group": "Présentation du week-end",
+    "label": "Créer ensemble",
+    "value": "Créer ensemble"
+  },
+  {
+    "id": "text-054",
+    "group": "Présentation du week-end",
+    "label": "Des ateliers pour essayer, imaginer et repartir avec un souvenir.",
+    "value": "Des ateliers pour essayer, imaginer et repartir avec un souvenir."
+  },
+  {
+    "id": "text-055",
+    "group": "Présentation du week-end",
+    "label": "Souffler un peu",
+    "value": "Souffler un peu"
+  },
+  {
+    "id": "text-056",
+    "group": "Présentation du week-end",
+    "label": "Profiter du chalet, du paysage et de cette pause hors du quotidien.",
+    "value": "Profiter du chalet, du paysage et de cette pause hors du quotidien."
+  },
+  {
+    "id": "text-057",
+    "group": "Activités",
+    "label": "Ce qui vous attend",
+    "value": "Ce qui vous attend"
+  },
+  {
+    "id": "text-058",
+    "group": "Activités",
+    "label": "Des livres, des copines,",
+    "value": "Des livres, des copines,"
+  },
+  {
+    "id": "text-059",
+    "group": "Activités",
+    "label": "et une bonne dose de montagne.",
+    "value": "et une bonne dose de montagne."
+  },
+  {
+    "id": "text-060",
+    "group": "Activités",
+    "label": "On ne vous dévoile pas tout maintenant. Mais voici l’ambiance : des mome…",
+    "value": "On ne vous dévoile pas tout maintenant. Mais voici l’ambiance : des moments simples, de quoi créer, prendre l’air et repartir avec plein de souvenirs ✨"
+  },
+  {
+    "id": "text-061",
+    "group": "Activités",
+    "label": "Les activités restent prévisionnelles. Les balades dépendront notamment …",
+    "value": "Les activités restent prévisionnelles. Les balades dépendront notamment de la météo ; les informations pratiques seront partagées avant le séjour."
+  },
+  {
+    "id": "text-062",
+    "group": "Logement",
+    "label": "Notre cocon à la montagne",
+    "value": "Notre cocon à la montagne"
+  },
+  {
+    "id": "text-063",
+    "group": "Logement",
+    "label": "Bienvenue ",
+    "value": "Bienvenue "
+  },
+  {
+    "id": "text-064",
+    "group": "Logement",
+    "label": "au chalet.",
+    "value": "au chalet."
+  },
+  {
+    "id": "text-065",
+    "group": "Logement",
+    "label": "Un salon pour bouquiner, une grande table pour se retrouver et des chamb…",
+    "value": "Un salon pour bouquiner, une grande table pour se retrouver et des chambres partagées pour prolonger la parenthèse."
+  },
+  {
+    "id": "text-066",
+    "group": "Logement",
+    "label": "Le week-end se déroule à Bolquère. L’adresse exacte du chalet sera commu…",
+    "value": "Le week-end se déroule à Bolquère. L’adresse exacte du chalet sera communiquée par e-mail aux participantes."
+  },
+  {
+    "id": "text-067",
+    "group": "Logement",
+    "label": "Les chambres sont partagées et certains lits doubles accueillent deux pa…",
+    "value": "Les chambres sont partagées et certains lits doubles accueillent deux participantes. Le parcours te permet d’indiquer tes préférences et de choisir ton couchage."
+  },
+  {
+    "id": "text-068",
+    "group": "Prestations incluses",
+    "label": "Dans ta parenthèse bookish",
+    "value": "Dans ta parenthèse bookish"
+  },
+  {
+    "id": "text-069",
+    "group": "Prestations incluses",
+    "label": "On a pensé",
+    "value": "On a pensé"
+  },
+  {
+    "id": "text-070",
+    "group": "Prestations incluses",
+    "label": "aux petits détails.",
+    "value": "aux petits détails."
+  },
+  {
+    "id": "text-071",
+    "group": "Prestations incluses",
+    "label": "Deux nuits sur place",
+    "value": "Deux nuits sur place"
+  },
+  {
+    "id": "text-072",
+    "group": "Prestations incluses",
+    "label": "Les repas du séjour",
+    "value": "Les repas du séjour"
+  },
+  {
+    "id": "text-073",
+    "group": "Prestations incluses",
+    "label": "Les activités et ateliers",
+    "value": "Les activités et ateliers"
+  },
+  {
+    "id": "text-074",
+    "group": "Prestations incluses",
+    "label": "Le matériel créatif",
+    "value": "Le matériel créatif"
+  },
+  {
+    "id": "text-075",
+    "group": "Prestations incluses",
+    "label": "Un welcome pack",
+    "value": "Un welcome pack"
+  },
+  {
+    "id": "text-076",
+    "group": "Prestations incluses",
+    "label": "Des livres et goodies avec les éditions Olympe",
+    "value": "Des livres et goodies avec les éditions Olympe"
+  },
+  {
+    "id": "text-077",
+    "group": "Prestations incluses",
+    "label": "Des activités autour de l’univers du roman",
+    "value": "Des activités autour de l’univers du roman"
+  },
+  {
+    "id": "text-078",
+    "group": "Prestations incluses",
+    "label": "Le partenariat avec Olympe est au cœur de cette édition. Le titre du rom…",
+    "value": "Le partenariat avec Olympe est au cœur de cette édition. Le titre du roman et le détail des surprises seront dévoilés prochainement."
+  },
+  {
+    "id": "text-079",
+    "group": "Tarifs affichés",
+    "label": "Choisis ta parenthèse",
+    "value": "Choisis ta parenthèse"
+  },
+  {
+    "id": "text-080",
+    "group": "Tarifs affichés",
+    "label": "Un week-end ",
+    "value": "Un week-end "
+  },
+  {
+    "id": "text-081",
+    "group": "Tarifs affichés",
+    "label": "pour toi.",
+    "value": "pour toi."
+  },
+  {
+    "id": "text-082",
+    "group": "Tarifs affichés",
+    "label": "EARLY BIRD",
+    "value": "EARLY BIRD"
+  },
+  {
+    "id": "text-083",
+    "group": "Tarifs affichés",
+    "label": "225 €",
+    "value": "225 €"
+  },
+  {
+    "id": "text-084",
+    "group": "Tarifs affichés",
+    "label": "par participante · quota à définir",
+    "value": "par participante · quota à définir"
+  },
+  {
+    "id": "text-085",
+    "group": "Tarifs affichés",
+    "label": "TARIF NORMAL",
+    "value": "TARIF NORMAL"
+  },
+  {
+    "id": "text-086",
+    "group": "Tarifs affichés",
+    "label": "235 €",
+    "value": "235 €"
+  },
+  {
+    "id": "text-087",
+    "group": "Tarifs affichés",
+    "label": "par participante",
+    "value": "par participante"
+  },
+  {
+    "id": "text-088",
+    "group": "Tarifs affichés",
+    "label": "Paiement en 3 fois sans frais prévu, sous réserve de configuration. Dern…",
+    "value": "Paiement en 3 fois sans frais prévu, sous réserve de configuration. Dernière échéance au plus tard le 1er février 2027."
+  },
+  {
+    "id": "text-089",
+    "group": "Questions fréquentes",
+    "label": "Les petites questions",
+    "value": "Les petites questions"
+  },
+  {
+    "id": "text-090",
+    "group": "Questions fréquentes",
+    "label": "On te répond ",
+    "value": "On te répond "
+  },
+  {
+    "id": "text-091",
+    "group": "Questions fréquentes",
+    "label": "ici.",
+    "value": "ici."
+  },
+  {
+    "id": "text-092",
+    "group": "Dernier encart",
+    "label": "Prête pour le week-end",
+    "value": "Prête pour le week-end"
+  },
+  {
+    "id": "text-093",
+    "group": "Dernier encart",
+    "label": "des Baddies ? ❤️‍🔥",
+    "value": "des Baddies ? ❤️‍🔥"
+  }
+]
