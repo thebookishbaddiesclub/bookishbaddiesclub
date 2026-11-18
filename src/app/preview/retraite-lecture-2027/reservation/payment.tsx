@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, CreditCard, Heart, CalendarDays, Check } from "lucide-react";
 import { demoSeats } from "./demo-rooms";
-import { installments, monthAfter, euros } from "./demo-payment";
+import { installments, euros } from "./demo-payment";
 import type { Guests } from "./participants";
 import styles from "./retreat.module.css";
 
@@ -14,9 +14,19 @@ export default function Payment({seats,guests,onBack}:{seats:string[];guests:Gue
   const [today] = useState(() => new Date());
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { heading.current?.focus(); }, [status]);
-  const amounts = installments(price,seats.length,split);
+  // Use Paris calendar dates, independent of the visitor's timezone.
+  const paris = new Intl.DateTimeFormat("en-CA", {timeZone:"Europe/Paris",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(today);
+  const part = (type: string) => Number(paris.find(p => p.type === type)!.value);
+  const firstDay = Date.UTC(part("year"), part("month") - 1, part("day"));
+  const lastDay = Date.UTC(2027, 1, 1);
+  const day = 86400000;
+  const daysLeft = Math.round((lastDay - firstDay) / day);
+  const canSplit = daysLeft >= 2;
+  const payingSplit = split && canSplit;
+  const middleDay = firstDay + Math.floor(daysLeft / 2) * day;
+  const amounts = installments(price,seats.length,payingSplit);
   const total = price * seats.length;
-  const date = (n:number) => monthAfter(today,n).toLocaleDateString("fr-FR");
+  const date = (n:number) => new Date([firstDay, middleDay, lastDay][n]).toLocaleDateString("fr-FR", {timeZone:"UTC"});
   const reset = () => {setAccepted(false);setStatus("ready");};
 
   return <div className={styles.screen}>
@@ -26,7 +36,7 @@ export default function Payment({seats,guests,onBack}:{seats:string[];guests:Gue
     {status === "success" ? <div className={styles.center}>
       <div className={styles.summary}><Check size={32} aria-hidden="true" /><strong>Réservation simulée avec succès</strong><span>Chalet Husky · du 12 au 14 mars 2027</span><small>Dates et logement provisoires</small><span>Premier paiement simulé : {euros(amounts[0])}</span><span>Montant réellement débité : 0 €</span><span>Total du séjour : {euros(total)}</span></div>
       {seats.map(id=>{const s=demoSeats.find(s=>s.id===id)!;const g=guests[id];return <p key={id}>{g.first} · {s.room} · {s.label}</p>;})}
-      {split && <div className={styles.summary}><strong>Échéances restantes — simulation</strong><span>{date(1)} : {euros(amounts[1])}</span><span>{date(2)} : {euros(amounts[2])}</span></div>}
+      {payingSplit && <div className={styles.summary}><strong>Échéances restantes — simulation</strong><span>{date(1)} : {euros(amounts[1])}</span><span>{date(2)} : {euros(amounts[2])}</span></div>}
       <p>Les détails du week-end et les informations pratiques seront communiqués avant le séjour.</p>
       <p className={styles.hint}>L’e-mail récapitulatif et les paiements automatiques seront branchés plus tard. Cet essai n’est pas une réservation réelle.</p>
       <button className={styles.continue} onClick={reset}>Tester un autre paiement</button>
@@ -37,12 +47,12 @@ export default function Payment({seats,guests,onBack}:{seats:string[];guests:Gue
         <p>{seats.length} participante{seats.length>1?"s":""} × {euros(price)} = <strong>{euros(total)}</strong></p>
       </div>
       <div className={styles.cards}>
-        <button className={`${styles.card} ${!split?styles.selected:""}`} aria-pressed={!split} onClick={()=>{setSplit(false);reset();}}><CreditCard size={32} aria-hidden="true" /><strong>En une fois</strong><span>{euros(total)} aujourd’hui</span></button>
-        <button className={`${styles.card} ${split?styles.selected:""}`} aria-pressed={split} onClick={()=>{setSplit(true);reset();}}><CalendarDays size={32} aria-hidden="true" /><strong>En trois fois</strong><span>Trois échéances · sans frais dans cette simulation</span></button>
+        <button className={`${styles.card} ${!payingSplit?styles.selected:""}`} aria-pressed={!payingSplit} onClick={()=>{setSplit(false);reset();}}><CreditCard size={32} aria-hidden="true" /><strong>En une fois</strong><span>{euros(total)} aujourd’hui</span></button>
+        <button className={`${styles.card} ${payingSplit?styles.selected:""}`} aria-pressed={payingSplit} disabled={!canSplit} onClick={()=>{setSplit(true);reset();}}><CalendarDays size={32} aria-hidden="true" /><strong>En trois fois</strong><span>Trois échéances · dernier règlement le 1er février 2027</span></button>
       </div>
       <div className={styles.center}>
         <div className={styles.summary}><strong>Ton échéancier simulé</strong>{amounts.map((amount,i)=><span key={i}>{i===0?`Aujourd’hui (${date(0)})`:date(i)} : {euros(amount)}</span>)}<span>Total : {euros(total)}</span></div>
-        <p className={styles.hint}>Échéancier de démonstration : aujourd’hui, puis à un et deux mois si tu choisis trois fois. Les dates définitives seront confirmées avant l’ouverture.</p>
+        <p className={styles.hint}>En trois fois : un premier règlement à la réservation, le deuxième à mi-chemin et le dernier le 1er février 2027, avant le 02/02. Pour conserver trois dates distinctes, cette option est disponible jusqu’au 30 janvier inclus. Ensuite, le règlement se fait en une fois.</p>
         <label className={styles.consent}><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)} /> J’ai compris qu’il s’agit d’un essai : aucun paiement ni réservation réelle.</label>
         <p className={styles.hint}>Les conditions de réservation et d’annulation restent à définir. Elles devront être consultables et acceptées avant tout paiement réel.</p>
         {status === "failed" && <p role="alert">Paiement refusé — simulation. Aucun montant n’a été débité et aucune place n’a été réservée. Tu peux réessayer.</p>}
