@@ -5,3 +5,11 @@
 .hero>img{max-width:440px;height:440px;justify-self:center;border-radius:90px 90px 24px 24px;object-fit:contain;background:#e6dcd3}
 .slideshow{max-width:620px;margin:2.5rem auto}.slideshow img{height:360px;aspect-ratio:auto;object-fit:contain}.slideshow figure{max-width:100%}
 @media(max-width:640px){.hero>img{height:300px;max-width:100%}.slideshow img{height:280px}}
+
+/* Chalet copy and gallery share a row on desktop; round the photo itself. */
+.lodging{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(2rem,5vw,4rem);align-items:center}
+.lodging>div{min-width:0}.lodging .slideshow{width:100%;margin:0;justify-self:center}
+.slideImage{height:360px;display:flex;align-items:center;justify-content:center}
+.slideshow .slideImage img{width:auto;height:auto;max-width:100%;max-height:100%;aspect-ratio:auto;object-fit:contain;background:transparent;border-radius:25px}
+@media(max-width:800px){.lodging{grid-template-columns:1fr;gap:2rem}}
+@media(max-width:640px){.slideImage{height:280px}}

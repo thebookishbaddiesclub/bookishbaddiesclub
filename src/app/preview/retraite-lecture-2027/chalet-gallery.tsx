@@ -11,7 +11,7 @@ export default function ChaletGallery(){
  useEffect(()=>{if(!playing||hover||focus||reduced)return;const id=setInterval(()=>{if(!document.hidden)setIndex(i=>(i+1)%photos.length);},5000);return()=>clearInterval(id);},[playing,hover,focus,reduced]);
  function move(delta:number){setPlaying(false);setIndex(i=>(i+delta+photos.length)%photos.length);}
  return <div className={styles.slideshow} role="region" aria-roledescription="carrousel" aria-label="Photos du chalet" onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)} onFocusCapture={()=>setFocus(true)} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget))setFocus(false);}}>
-  <figure><img src={`/preview/retraite-lecture-2027/photos/${photos[index][0]}`} alt={photos[index][1]} width={1400} height={900}/><figcaption aria-live={playing?'off':'polite'}>{photos[index][1]}</figcaption></figure>
+  <figure><div className={styles.slideImage}><img src={`/preview/retraite-lecture-2027/photos/${photos[index][0]}`} alt={photos[index][1]} width={1400} height={900}/></div><figcaption aria-live={playing?'off':'polite'}>{photos[index][1]}</figcaption></figure>
   <div className={styles.galleryControls}><button aria-label="Photo précédente" onClick={()=>move(-1)}><ChevronLeft/></button><span>{index+1} / {photos.length}</span><button aria-label="Photo suivante" onClick={()=>move(1)}><ChevronRight/></button>{!reduced&&<button onClick={()=>setPlaying(v=>!v)} aria-label={playing?'Mettre le défilement en pause':'Lancer le défilement'}>{playing?<Pause/>:<Play/>}</button>}</div>
  </div>;
 }
