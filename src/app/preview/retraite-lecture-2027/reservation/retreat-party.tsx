@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Check, Heart, Minus, Plus, UserRound, UsersRound, Users, BedSingle, BedDouble, Sparkles } from "lucide-react";
 import styles from "./retreat.module.css";
 
-import { demoRooms, demoSeats, sameDouble, type SleepPreference } from "./demo-rooms";
+import { demoRooms, demoSeats, physicalSeats, seatUnavailable, sameDouble, type SleepPreference } from "./demo-rooms";
 
 import Participants, { type Guests } from "./participants";
 
@@ -23,15 +23,17 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
   const [group,setGroup]=useState<GroupState|null>(null);
   const [requestId,setRequestId]=useState(()=>crypto.randomUUID());
   const [unavailable,setUnavailable]=useState<string[]>([]);
+  const [inventoryReady,setInventoryReady]=useState(false);
+  const [occupants,setOccupants]=useState<{seats:string[];name:string;city:string}[]>([]);
   const [inventoryError,setInventoryError]=useState("");
-  useEffect(()=>{let live=true;async function sync(){try{const data=await groupCall({action:"inventory"});if(live){setUnavailable(data.unavailable);setInventoryError("");}}catch(e){if(live)setInventoryError(e instanceof Error?e.message:"Disponibilités indisponibles");}}void sync();const interval=setInterval(sync,5000);return()=>{live=false;clearInterval(interval);};},[]);
+  useEffect(()=>{let live=true;async function sync(){try{const data=await groupCall({action:"inventory"});if(live){setUnavailable(data.unavailable);setOccupants(data.occupants);setInventoryReady(true);setInventoryError("");}}catch(e){if(live){setInventoryReady(false);setInventoryError(e instanceof Error?e.message:"Disponibilités indisponibles");}}}void sync();const interval=setInterval(sync,5000);return()=>{live=false;clearInterval(interval);};},[]);
   const [guests, setGuests] = useState<Guests>({});
   const [party, setParty] = useState<Party | null>(null);
   const [count, setCount] = useState(3);
   const [screen, setScreen] = useState<"choice" | "count" | "sleep" | "share" | "rooms" | "beds" | "done" | "participants" | "payment">("choice");
   const [sleep, setSleep] = useState<SleepPreference | null>(null);
   const [share, setShare] = useState<boolean | null>(null);
-  const [roomId, setRoomId] = useState<string>("1");
+  const [roomId, setRoomId] = useState<string>("2");
   const [seats, setSeats] = useState<string[]>([]);
   const heading = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
@@ -64,13 +66,13 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
     setScreen(party === "duo" && value !== "single" ? "share" : "rooms");
   }
   function toggleSeat(id: string) {
-    setSeats(current => current.includes(id) ? current.filter(s => s !== id) : current.length < total ? [...current, id] : current);
+    setSeats(current => current.includes(id) ? current.filter(s => s !== id) : current.length < total ? [...current.filter(s=>!(id.startsWith("3-") && s==="3-private")), id] : current);
   }
-  const complete = seats.length === total && (!share || sameDouble(seats)) && !seats.some(s=>unavailable.includes(s));
-  const own = seats.includes(ownerSeat)?ownerSeat:seats[0];
+  const complete = inventoryReady && seats.length === total && (!share || sameDouble(seats)) && !seats.some(s=>seatUnavailable(s,unavailable));
+  const own = seats.includes("3-private")?"3-private":seats.includes(ownerSeat)?ownerSeat:seats[0];
   const mySeats = own?[own]:[];
   async function confirm(cents:number,split:boolean){
-    const result=await groupCall({action:"start",requestId,seats,seat:own,guest:guests[own],cents,split});setGroup(result);
+    const result=await groupCall({action:"start",requestId,seats,seat:own,guest:guests[own],cents,split});setGroup(result);const receipt=result.places.find((p:{id:string})=>p.id===own);return {cents:receipt.cents,split:receipt.split};
   }
   return <section className={styles.retreat} aria-label="Aperçu de la réservation de la retraite">
     <div className={styles.topline}>
@@ -105,7 +107,7 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
           <output aria-live="polite">{count}<small>participantes</small></output>
           <button aria-label="Une participante en plus" disabled={count >= capacity} onClick={() => { setCount(n => Math.min(capacity, n + 1)); setSeats([]); }}><Plus aria-hidden="true" /></button>
         </div>
-        <p className={styles.hint}>De 3 à {capacity} participantes · capacité fictive pour cet aperçu.</p>
+        <p className={styles.hint}>De 3 à {capacity} participantes · places maximum, ou 11 si la chambre 3 est privatisée.</p>
         <button className={styles.continue} onClick={() => setScreen("sleep")}>C’est nous ! <Heart size={17} aria-hidden="true" /></button>
       </div>}
 
@@ -123,8 +125,8 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
       </>}
       {screen === "rooms" && <>
         <div className={styles.rooms}>{demoRooms.filter(r => r.beds.length > 0).map(r => <button key={r.id} disabled={r.beds.length === 0} className={styles.card} onClick={() => { setRoomId(r.id); setScreen("beds"); }}>
-          <strong>{r.name}</strong><div className={styles.bedIcons}>{r.beds.map((type,i) => type === "double" ? <BedDouble key={i} aria-label="Lit double" /> : <BedSingle key={i} aria-label="Lit individuel" />)}</div>
-          <span>{r.beds.length === 0 ? "Réservée à l’organisatrice" : `${demoSeats.filter(s => s.roomId === r.id && !unavailable.includes(s.id)).length} places disponibles`}</span>
+          <strong>{r.name}</strong><span>{r.floor}</span><div className={styles.bedIcons}>{r.beds.map((type,i) => type === "double" ? <BedDouble key={i} aria-label="Lit double" /> : <BedSingle key={i} aria-label="Lit individuel" />)}</div>
+          <span>{r.beds.length === 0 ? "Réservée à l’organisatrice" : `${physicalSeats.filter(s => s.roomId === r.id && !unavailable.includes(s.id)).length} places disponibles`}</span>
           {r.beds.length > 0 && (sleep === "any" || r.beds.some(b => b === sleep)) && <span>Selon ta préférence</span>}
           {seats.some(id => demoSeats.find(s => s.id === id)?.roomId === r.id) && <span>✓ Des places choisies ici</span>}
         </button>)}</div>
@@ -135,9 +137,10 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
       {screen === "beds" && <>
         <div className={styles.rooms}>{room.beds.map((type, index) => <div key={index} className={styles.bed}>
           {type === "double" ? <BedDouble size={36} aria-hidden="true" /> : <BedSingle size={36} aria-hidden="true" />}
-          <h2>Lit {index + 1} · {type === "double" ? "double partagé" : "individuel"}</h2>
-          {demoSeats.filter(s => s.bedId === `${room.id}-${index}`).map(s => <button key={s.id} className={styles.seat} aria-pressed={seats.includes(s.id)} disabled={unavailable.includes(s.id)||(!seats.includes(s.id) && seats.length >= total)} onClick={() => toggleSeat(s.id)}>{unavailable.includes(s.id)?"Indisponible":seats.includes(s.id) ? "✓ Sélectionnée" : "Place libre"} · {s.type === "double" ? s.label.split(", ")[1] : "1 personne"}</button>)}
+          <h2>Lit {index + 1} · {type === "double" ? (room.id==="2"||room.id==="4"?"double mezzanine partagé":"double partagé") : "individuel"}</h2>
+          {demoSeats.filter(s => s.bedId === `${room.id}-${index}`).map(s => <button key={s.id} className={styles.seat} aria-pressed={seats.includes(s.id)} disabled={!inventoryReady||seats.includes("3-private")&&s.roomId==="3"||unavailable.includes(s.id)||(!seats.includes(s.id) && seats.length >= total)} onClick={() => toggleSeat(s.id)}>{unavailable.includes(s.id)?(occupants.find(o=>o.seats.includes(s.id))?.name||"Indisponible"):seats.includes(s.id) ? "✓ Sélectionnée" : "Place libre"} · {s.type === "double" ? s.label.split(", ")[1] : "1 personne"}</button>)}
         </div>)}</div>
+        {room.id==="3" && <button className={`${styles.card} ${seats.includes("3-private")?styles.selected:""}`} disabled={total>11||!inventoryReady||seatUnavailable("3-private",unavailable)||(!seats.includes("3-private")&&seats.filter(s=>!s.startsWith("3-")).length>=total)} aria-pressed={seats.includes("3-private")} onClick={()=>{setShare(false);setOwnerSeat("3-private");setSeats(current=>current.includes("3-private")?current.filter(s=>s!=="3-private"):[...current.filter(s=>!s.startsWith("3-")),"3-private"]);}}><BedDouble size={35}/><strong>Privatiser cette chambre · 315 €</strong><span>Pour toi seule, sans tarif Early. Les deux places du lit sont bloquées ; le séjour accueille alors 11 participantes maximum.</span></button>}
         {!complete && <p className={styles.hint} role="status">{seats.length < total ? `Choisis encore ${total - seats.length} place(s) pour continuer. Tu peux les choisir dans une autre chambre.` : "Choisissez les deux places du même lit double, ou revenez modifier votre préférence."}</p>}
         <div className="flex flex-wrap items-center gap-4">
           <button className={styles.continue} disabled={!complete} onClick={() => setScreen("done")}>Continuer vers le récapitulatif</button>
@@ -149,8 +152,8 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
           {demoSeats.filter(s => seats.includes(s.id)).map(s => <span key={s.id}>{s.room} · {s.label}</span>)}
         </div>
         <p>Tu règles uniquement ta place. Après ton premier paiement simulé, les places choisies pour tes copines seront gardées une heure. Chacune utilisera le lien privé pour renseigner ses informations et payer individuellement.</p>
-        {total>1 && <label className={styles.field}>Quelle est ta place ?<select value={own} onChange={e=>{setOwnerSeat(e.target.value);setRequestId(crypto.randomUUID());}}>{seats.map(id=>{const s=demoSeats.find(s=>s.id===id)!;return <option key={id} value={id}>{s.room} · {s.label}</option>;})}</select></label>}
-        <button className={styles.continue} onClick={() => setScreen("participants")}>Renseigner mes informations</button>
+        {total>1 && !seats.includes("3-private") && <label className={styles.field}>Quelle est ta place ?<select value={own} onChange={e=>{setOwnerSeat(e.target.value);setRequestId(crypto.randomUUID());}}>{seats.map(id=>{const s=demoSeats.find(s=>s.id===id)!;return <option key={id} value={id}>{s.room} · {s.label}</option>;})}</select></label>}
+        <button className={styles.continue} disabled={!complete} onClick={() => setScreen("participants")}>Renseigner mes informations</button>
         <button className={styles.continue} onClick={() => setScreen("rooms")}>Modifier les couchages</button>
       </div>}
     </div>}

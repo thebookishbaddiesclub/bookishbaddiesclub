@@ -2,14 +2,22 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, CreditCard, Heart, CalendarDays, Check } from "lucide-react";
 import { demoSeats } from "./demo-rooms";
+import { groupCall } from "./group-api-client";
 import { installments, euros } from "./demo-payment";
 import type { Guests } from "./participants";
 import styles from "./retreat.module.css";
 
-export default function Payment({seats,guests,onBack,onConfirm,afterSuccess}:{seats:string[];guests:Guests;onBack:()=>void;onConfirm?:(cents:number,split:boolean)=>Promise<void>;afterSuccess?:React.ReactNode}) {
+export default function Payment({seats,guests,onBack,onConfirm,afterSuccess}:{seats:string[];guests:Guests;onBack:()=>void;onConfirm?:(cents:number,split:boolean)=>Promise<{cents:number;split:boolean}>;afterSuccess?:React.ReactNode}) {
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
-  const [price,setPrice] = useState(22500);
+  const [price,setPrice] = useState(21500);
+  const [priced,setPriced]=useState(false);
+  async function refreshPrice(){
+    setPriced(false);setAccepted(false);
+    try{const inventory=await groupCall({action:"inventory"});setPrice(seats[0]==="3-private"?31500:inventory.cents);setPriced(true);setError("");}
+    catch(e){setError(e instanceof Error?e.message:"Tarif indisponible.");}
+  }
+  useEffect(()=>{void refreshPrice();},[seats[0]]);
   const [split,setSplit] = useState(false);
   const [accepted,setAccepted] = useState(false);
   const [status,setStatus] = useState<"ready"|"failed"|"cancelled"|"success">("ready");
@@ -32,8 +40,8 @@ export default function Payment({seats,guests,onBack,onConfirm,afterSuccess}:{se
   const reset = () => {setAccepted(false);setStatus("ready");};
 
   async function confirm(){
-    if(busy)return;setBusy(true);setError("");
-    try{await onConfirm?.(price,payingSplit);setStatus("success");}catch(e){setError(e instanceof Error?e.message:"Réessaie.");}finally{setBusy(false);}
+    if(busy||!priced)return;setBusy(true);setError("");
+    try{const receipt=await onConfirm?.(price,payingSplit);if(receipt){setPrice(receipt.cents);setSplit(receipt.split);}setStatus("success");}catch(e){setError(e instanceof Error?e.message:"Réessaie.");}finally{setBusy(false);}
   }
   return <div className={styles.screen}>
     {status !== "success" && <button className={styles.back} onClick={onBack}><ArrowLeft size={18} aria-hidden="true" /> Retour aux participantes</button>}
@@ -49,8 +57,9 @@ export default function Payment({seats,guests,onBack,onConfirm,afterSuccess}:{se
       {!onConfirm && <button className={styles.continue} onClick={reset}>Tester un autre paiement</button>}
     </div> : <>
       <div className={styles.center}>
-        <label className={styles.field}>Tarif à tester dans la démonstration<select disabled={busy} value={price} onChange={e=>{setPrice(Number(e.target.value));reset();}}><option value={22500}>Early Bird · 225 € par personne</option><option value={23500}>Tarif normal · 235 € par personne</option></select></label>
-        <p className={styles.hint}>Ce sélecteur sert aux tests. Les tarifs et quotas définitifs seront gérés dans l’administration.</p>
+        <p className={styles.field}>{price===31500?"Chambre privatisée":price===19900?"Early Baddies · parmi les quatre premières places confirmées":"Classique"} · {euros(price)}</p>
+        <p className={styles.hint}>Tarif vérifié à la confirmation. Les places gardées pour les copines ne réservent pas le tarif Early.</p>
+        <button className={styles.back} disabled={busy} onClick={()=>void refreshPrice()}>Actualiser le tarif</button>
         <p>{seats.length} participante{seats.length>1?"s":""} × {euros(price)} = <strong>{euros(total)}</strong></p>
       </div>
       <div className={styles.cards}>
@@ -64,7 +73,7 @@ export default function Payment({seats,guests,onBack,onConfirm,afterSuccess}:{se
         <p className={styles.hint}>Les conditions de réservation et d’annulation restent à définir. Elles devront être consultables et acceptées avant tout paiement réel.</p>
         {status === "failed" && <p role="alert">Paiement refusé — simulation. Aucun montant n’a été débité et aucune place n’a été réservée. Tu peux réessayer.</p>}
         {status === "cancelled" && <p role="status">Paiement abandonné — simulation. Tes réponses sont conservées pour reprendre, mais aucune place n’est réservée.</p>}
-        <button className={styles.continue} disabled={!accepted||busy} onClick={confirm}>Simuler le paiement de {euros(amounts[0])} <Heart size={17} aria-hidden="true" /></button>
+        <button className={styles.continue} disabled={!accepted||busy||!priced} onClick={confirm}>Simuler le paiement de {euros(amounts[0])} <Heart size={17} aria-hidden="true" /></button>
         {error && <p role="alert">{error}</p>}
         {busy && <p role="status">Confirmation de la simulation…</p>}
         <div className={styles.testActions}><button disabled={!accepted} onClick={()=>setStatus("failed")}>Tester un refus</button><button onClick={()=>setStatus("cancelled")}>Tester un abandon</button></div>

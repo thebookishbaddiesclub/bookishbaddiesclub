@@ -201,7 +201,7 @@
     "id": "text-033",
     "group": "Accueil",
     "label": "À partir de 225 €",
-    "value": "À partir de 225 €"
+    "value": "À partir de 199 €"
   },
   {
     "id": "text-034",
@@ -495,37 +495,37 @@
     "id": "text-082",
     "group": "Tarifs affichés",
     "label": "EARLY BIRD",
-    "value": "EARLY BIRD"
+    "value": "EARLY BADDIES"
   },
   {
     "id": "text-083",
     "group": "Tarifs affichés",
     "label": "225 €",
-    "value": "225 €"
+    "value": "199 €"
   },
   {
     "id": "text-084",
     "group": "Tarifs affichés",
     "label": "par participante · quota à définir",
-    "value": "par participante · quota à définir"
+    "value": "par participante · les 4 premières places confirmées"
   },
   {
     "id": "text-085",
     "group": "Tarifs affichés",
     "label": "TARIF NORMAL",
-    "value": "TARIF NORMAL"
+    "value": "CLASSIQUE"
   },
   {
     "id": "text-086",
     "group": "Tarifs affichés",
     "label": "235 €",
-    "value": "235 €"
+    "value": "215 €"
   },
   {
     "id": "text-087",
     "group": "Tarifs affichés",
     "label": "par participante",
-    "value": "par participante"
+    "value": "par participante · chambre 3 privatisée pour une personne : 315 €, sans tarif Early"
   },
   {
     "id": "text-088",

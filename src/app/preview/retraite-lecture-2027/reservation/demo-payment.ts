@@ -1,5 +1,5 @@
 export function installments(unitCents: number, people: number, split: boolean) {
-  if (![22500, 23500].includes(unitCents) || !Number.isInteger(people) || people < 1 || people > 12) throw Error('Invalid demo price');
+  if (![19900, 21500, 31500].includes(unitCents) || !Number.isInteger(people) || people < 1 || people > 12) throw Error('Invalid demo price');
   if (!split) return [unitCents * people];
   const first = Math.floor(unitCents / 3);
   return [first * people, first * people, (unitCents - 2 * first) * people];

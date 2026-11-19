@@ -4,11 +4,9 @@ import Participants,{type Guests} from './participants';
 import Payment from './payment';
 import {demoSeats} from './demo-rooms';
 import styles from './retreat.module.css';
-export type GroupState={token:string;now:string;expiresAt:string;places:{id:string;state:'held'|'paid'|'released';name:string|null}[]};
-export async function groupCall(body:unknown){
- const r=await fetch('/preview/retraite-lecture-2027/group-api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
- const data=await r.json();if(!r.ok)throw Error(data.error||'Réessaie.');return data;
-}
+export type GroupState={token:string;now:string;expiresAt:string;places:{id:string;state:'held'|'paid'|'released'|'cancelled';name:string|null}[]};
+export {groupCall} from "./group-api-client";
+import {groupCall} from "./group-api-client";
 export function GroupLink({group}:{group:GroupState}){
  const [copied,setCopied]=useState(false);
  const url=typeof window==='undefined'?'':window.location.origin+'/preview/retraite-lecture-2027/groupe#'+group.token;
@@ -31,6 +29,6 @@ export default function GroupJoin(){
  return <section className={styles.retreat}><p className={styles.hint}>Le Week-end des Baddies — Mountain Edition · test privé</p><h1>Les copines t’attendent ❤️‍🔥</h1><Countdown token={token} onUpdate={setGroup}/>
  {stage==='choose'&&<><p>Choisis une place gardée pour votre groupe. Tu rempliras tes propres informations et tu paieras seulement ta place, en une ou trois fois.</p><div className={styles.rooms}>{group?.places.map(p=>{const s=demoSeats.find(s=>s.id===p.id)!;return <button key={p.id} className={styles.card} disabled={p.state!=='held'||Date.parse(group.expiresAt)<=Date.parse(group.now)} onClick={()=>{setSeat(p.id);setStage('info');}}><strong>{s.room}</strong><span>{s.label}</span><span>{p.state==='held'?'Gardée pour une copine':p.state==='paid'?(p.name||'Place réservée'):'Place libérée'}</span></button>;})}</div></>}
  {stage==='info'&&<Participants seats={[seat]} guests={guests} onChange={setGuests} onBack={()=>setStage('choose')} onContinue={()=>setStage('pay')}/>}
- {stage==='pay'&&<Payment seats={[seat]} guests={guests} onBack={()=>setStage('info')} onConfirm={async(cents,split)=>{const data=await groupCall({action:'claim',token,requestId,seat,guest:guests[seat],cents,split});setGroup(data);}}/>}
+ {stage==='pay'&&<Payment seats={[seat]} guests={guests} onBack={()=>setStage('info')} onConfirm={async(cents,split)=>{const data=await groupCall({action:'claim',token,requestId,seat,guest:guests[seat],cents,split});setGroup(data);const receipt=data.places.find((p:{id:string})=>p.id===seat);return {cents:receipt.cents,split:receipt.split};}}/>}
  </section>;
 }

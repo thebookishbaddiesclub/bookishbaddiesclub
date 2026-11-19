@@ -14,12 +14,12 @@ export async function POST(request:Request){
  if(['status','claim'].includes(b.action)&&!uuid(b.token))return json({error:'Lien invalide.'},400);
  if(['start','claim'].includes(b.action)){
  const g=b.guest;
- if(!uuid(b.requestId)||!demoSeats.some(s=>s.id===b.seat)||![22500,23500].includes(b.cents)||typeof b.split!=='boolean'||!g||!['first','last','city','email'].every(k=>typeof g[k]==='string'&&g[k].trim()&&g[k].length<=254)||!/^\S+@\S+\.\S+$/.test(g.email)||typeof g.diet!=='string'||g.diet.length>1000||typeof g.visible!=='boolean')return json({error:'Vérifie tes informations.'},400);
+ if(!uuid(b.requestId)||!demoSeats.some(s=>s.id===b.seat)||![19900,21500,31500].includes(b.cents)||typeof b.split!=='boolean'||!g||!['first','last','city','email'].every(k=>typeof g[k]==='string'&&g[k].trim()&&g[k].length<=254)||!/^\S+@\S+\.\S+$/.test(g.email)||typeof g.diet!=='string'||g.diet.length>1000||typeof g.visible!=='boolean')return json({error:'Vérifie tes informations.'},400);
  }
  if(b.action==='start'&&(!Array.isArray(b.seats)||b.seats.length>12||!b.seats.length||new Set(b.seats).size!==b.seats.length||!b.seats.includes(b.seat)||!b.seats.every((id:string)=>demoSeats.some(s=>s.id===id))))return json({error:'Choisis des couchages valides.'},400);
- const {data,error}=await getStockDatabase().rpc('retreat_preview_action',{p_action:b.action,p_token:b.token||null,p_request:b.requestId||null,p_seats:b.seats||null,p_seat:b.seat||null,p_guest:b.guest||null,p_cents:b.cents||null,p_split:b.split||false});
+ const {data,error}=await getStockDatabase().rpc('retreat_v2_action',{p_action:b.action,p_token:b.token||null,p_request:b.requestId||null,p_seats:b.seats||null,p_seat:b.seat||null,p_guest:b.guest||null,p_cents:b.cents||null,p_split:b.split||false});
  if(error){
- const message=error.message.includes('EXPIRED')?'Le délai est écoulé. Les places déjà payées sont conservées.':error.message.includes('UNAVAILABLE')?'Cette sélection n’est plus disponible. Reviens au plan des chambres.':error.message.includes('NOT_FOUND')?'Ce lien de groupe est introuvable.':'Le test des groupes doit être activé dans Supabase avec le script fourni.';
+ const message=error.message.includes('CANCELLED')?'Cette réservation a été annulée. Recommence une nouvelle réservation.':error.message.includes('PRICE_CHANGED')?'Le dernier tarif Early vient d’être attribué. Actualise le tarif avant de confirmer.':error.message.includes('SPLIT_CLOSED')?'Le paiement en trois fois n’est plus disponible.':error.message.includes('EXPIRED')?'Le délai est écoulé. Les places déjà payées sont conservées.':error.message.includes('UNAVAILABLE')?'Cette sélection n’est plus disponible. Reviens au plan des chambres.':error.message.includes('NOT_FOUND')?'Ce lien de groupe est introuvable.':'La nouvelle billetterie doit être activée dans Supabase avec le script activer-billetterie-retraite.sql.';
  return json({error:message},409);
  }
  return json(data);
