@@ -1,3 +1,4 @@
+import {retreatStripeConfigured} from '@/lib/server/retreat-stripe';
 import { cookies } from 'next/headers';
 import { validSession } from '@/lib/admin-session';
 import { getStockDatabase } from '@/lib/server/clients';
@@ -12,6 +13,7 @@ export async function POST(request:Request){
  const b=await request.json();
  if(!['inventory','status','start','claim'].includes(b.action))return json({error:'Action invalide.'},400);
  if(['status','claim'].includes(b.action)&&!uuid(b.token))return json({error:'Lien invalide.'},400);
+ if(['start','claim'].includes(b.action)&&retreatStripeConfigured())return json({error:'Utilise le paiement Stripe de test pour confirmer cette place.'},409);
  if(['start','claim'].includes(b.action)){
  const g=b.guest;
  if(!uuid(b.requestId)||!demoSeats.some(s=>s.id===b.seat)||![19900,21500,31500].includes(b.cents)||typeof b.split!=='boolean'||!g||!['first','last','city','email'].every(k=>typeof g[k]==='string'&&g[k].trim()&&g[k].length<=254)||!/^\S+@\S+\.\S+$/.test(g.email)||typeof g.diet!=='string'||g.diet.length>1000||typeof g.visible!=='boolean')return json({error:'Vérifie tes informations.'},400);
@@ -22,6 +24,6 @@ export async function POST(request:Request){
  const message=error.message.includes('CANCELLED')?'Cette réservation a été annulée. Recommence une nouvelle réservation.':error.message.includes('PRICE_CHANGED')?'Le dernier tarif Early vient d’être attribué. Actualise le tarif avant de confirmer.':error.message.includes('SPLIT_CLOSED')?'Le paiement en trois fois n’est plus disponible.':error.message.includes('EXPIRED')?'Le délai est écoulé. Les places déjà payées sont conservées.':error.message.includes('UNAVAILABLE')?'Cette sélection n’est plus disponible. Reviens au plan des chambres.':error.message.includes('NOT_FOUND')?'Ce lien de groupe est introuvable.':'La nouvelle billetterie doit être activée dans Supabase avec le script activer-billetterie-retraite.sql.';
  return json({error:message},409);
  }
- return json(data);
+ return json({...data,stripeTest:retreatStripeConfigured()});
  }catch{return json({error:'Impossible de joindre le service des groupes. Réessaie.'},503);}
 }

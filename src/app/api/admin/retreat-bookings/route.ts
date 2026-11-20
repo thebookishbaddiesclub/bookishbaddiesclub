@@ -8,6 +8,12 @@ async function authorized(){return validSession((await cookies()).get('admin_ses
 export async function GET(){
  if(!await authorized())return json({error:'Connexion admin requise.'},401);
  const {data,error}=await getStockDatabase().rpc('retreat_v2_action',{p_action:'admin_list'});
+ if(!error){
+  const db=getStockDatabase();
+  const {data:orders}=await db.from('retreat_payment_orders').select('id,place_id,state,cents,split,session_id,created_at,expires_at');
+  const {data:steps}=await db.from('retreat_payment_steps').select('order_id,number,cents,due_at,status,hosted_url,error');
+  return json({...data,payments:orders||[],paymentSteps:steps||[]});
+ }
  return error?json({error:'Active le script activer-billetterie-retraite.sql dans Supabase, puis recharge cette page.'},503):json(data);
 }
 export async function POST(request:Request){

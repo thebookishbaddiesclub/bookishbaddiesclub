@@ -87,7 +87,7 @@ export default function RetreatParty({ capacity }: { capacity: number }) {
       <small>Étape {step} · {step === 1 ? "Les participantes" : step === 2 ? "Le couchage" : step === 3 ? "Les chambres" : step === 4 ? "Le récapitulatif" : step === 5 ? "Les participantes" : "Le paiement"}</small>
     </header>
 
-    {screen === "payment" ? <Payment seats={mySeats} onConfirm={confirm} afterSuccess={group && total>1?<GroupLink group={group}/>:null} guests={guests} onBack={() => setScreen("participants")} /> : screen === "participants" ? <Participants seats={mySeats} guests={guests} onChange={setGuests} onBack={() => setScreen("done")} onContinue={() => setScreen("payment")} /> : <div key={screen} className={styles.screen}>
+    {screen === "payment" ? <Payment checkout={{requestId,seats,seat:own}} seats={mySeats} onConfirm={confirm} afterSuccess={group && total>1?<GroupLink group={group}/>:null} guests={guests} onBack={() => setScreen("participants")} /> : screen === "participants" ? <Participants seats={mySeats} guests={guests} onChange={setGuests} onBack={() => setScreen("done")} onContinue={() => setScreen("payment")} /> : <div key={screen} className={styles.screen}>
       {screen !== "choice" && <button className={styles.back} onClick={back}><ArrowLeft size={18} aria-hidden="true" /> Retour</button>}
       <h1 ref={heading} tabIndex={-1}>{titles[screen]}</h1>
 
