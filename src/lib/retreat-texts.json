@@ -86,8 +86,8 @@
   {
     "id": "text-014",
     "group": "Questions fréquentes",
-    "label": "Choisis vos places et règle uniquement la tienne. Dès la confirmation de…",
-    "value": "Choisis vos places et règle uniquement la tienne. Dès la confirmation de ton premier paiement, les autres places du groupe sont gardées une heure. Tu partages le lien privé : chacune renseigne ses informations et paie sa place, en une ou trois fois selon la date. Le compte à rebours est commun. À la fin du délai, seules les places non payées sont libérées."
+    "label": "Choisis vos places et règle uniquement la tienne. Dès la confirmation de ton paiement, les",
+    "value": "Choisis vos places et règle uniquement la tienne. Dès la confirmation de ton paiement, les autres places du groupe sont gardées une heure. Tu partages le lien privé : chacune renseigne ses informations et paie sa place par carte ou avec Klarna si cette option est proposée. Le compte à rebours est commun. À la fin du délai, seules les places non payées sont libérées."
   },
   {
     "id": "text-015",
@@ -122,8 +122,8 @@
   {
     "id": "text-020",
     "group": "Questions fréquentes",
-    "label": "Le paiement en trois fois sans frais est prévu, sous réserve de sa confi…",
-    "value": "Le paiement en trois fois sans frais est prévu, sous réserve de sa configuration définitive. Dans la simulation : premier règlement à la réservation, deuxième à mi-chemin et dernier le 1er février 2027. L’option est proposée jusqu’au 30 janvier inclus, puis le règlement est en une fois."
+    "label": "Tu pourras choisir la carte bancaire en une fois ou Klarna, si cette option est proposée p",
+    "value": "Tu pourras choisir la carte bancaire en une fois ou Klarna, si cette option est proposée pour ta réservation. Klarna affiche ses options, dates et conditions avant validation, sous réserve d’éligibilité et d’acceptation. Le bookclub ne programme pas de prélèvements supplémentaires."
   },
   {
     "id": "text-021",
@@ -212,8 +212,8 @@
   {
     "id": "text-035",
     "group": "Accueil",
-    "label": "L’adresse exacte sera envoyée par e-mail aux participantes. Paiement en …",
-    "value": "L’adresse exacte sera envoyée par e-mail aux participantes. Paiement en 3 fois prévu, sous réserve de configuration."
+    "label": "L’adresse exacte sera envoyée par e-mail aux participantes. Carte bancaire ou Klarna selon",
+    "value": "L’adresse exacte sera envoyée par e-mail aux participantes. Carte bancaire ou Klarna selon éligibilité."
   },
   {
     "id": "text-036",
@@ -530,8 +530,8 @@
   {
     "id": "text-088",
     "group": "Tarifs affichés",
-    "label": "Paiement en 3 fois sans frais prévu, sous réserve de configuration. Dern…",
-    "value": "Paiement en 3 fois sans frais prévu, sous réserve de configuration. Dernière échéance au plus tard le 1er février 2027."
+    "label": "Paiement par carte en une fois ou avec Klarna selon éligibilité. Les options et conditions",
+    "value": "Paiement par carte en une fois ou avec Klarna selon éligibilité. Les options et conditions Klarna sont présentées avant validation."
   },
   {
     "id": "text-089",

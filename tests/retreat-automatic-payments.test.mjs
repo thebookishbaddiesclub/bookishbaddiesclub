@@ -62,3 +62,23 @@ test('a pending group payment remains protected during group expiry and on an ad
  assert((await inventory()).unavailable.includes('2-0-0'));
  }finally{await db.close();}
 });
+
+test('full-price checkout settles once without a saved card and releases a failed reservation',async()=>{
+ const {db,inventory}=await setup();
+ try{
+  const id=randomUUID(),plan=[{number:1,cents:19900,dueAt:new Date().toISOString()}];
+  const o=(await db.query("select retreat_payment_prepare($1,null,$2,$3,$4,19900,false,$5,'Full payment test') as result",[id,['2-0-0','2-0-1'],'2-0-0',JSON.stringify(guest),JSON.stringify(plan)])).rows[0].result;
+  await db.query("update retreat_payment_orders set session_id='cs_full',customer_id='cus_test',consent_version='card-klarna-v2' where id=$1",[id]);
+  const finish=(paid,cents)=>db.query("select retreat_payment_finish($1,'cs_full',$2,$3,'eur','cus_test',null,now())",[id,paid,cents]);
+  await assert.rejects(finish(true,6633),/PAYMENT_MISMATCH/);
+  await finish(true,19900);await finish(true,19900);await finish(false,0);
+  assert.equal((await inventory()).earlyRemaining,3);
+  const steps=(await db.query('select * from retreat_payment_steps where order_id=$1',[id])).rows;
+  assert.equal(steps.length,1);assert.equal(steps[0].status,'paid');assert.equal(steps[0].invoice_id,null);
+  const friendId=randomUUID();
+  await db.query("select retreat_payment_prepare($1,$2,$3,$4,$5,19900,false,$6,'Full payment test')",[friendId,o.group_token,['2-0-1'],'2-0-1',JSON.stringify(guest),JSON.stringify(plan)]);
+  await db.query("update retreat_payment_orders set session_id='cs_failed',customer_id='cus_test' where id=$1",[friendId]);
+  await db.query("select retreat_payment_finish($1,'cs_failed',false,0,'eur',null,null,null)",[friendId]);
+  const available=await inventory();assert(available.unavailable.includes('2-0-0'));assert(!available.unavailable.includes('2-0-1'));
+ }finally{await db.close();}
+});

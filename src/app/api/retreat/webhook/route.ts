@@ -8,7 +8,7 @@ export async function POST(request:Request){
  try{event=getRetreatStripe().webhooks.constructEvent(await request.text(),signature,secret);}catch{return Response.json({error:'Invalid signature'},{status:400});}
  if(event.livemode)return Response.json({error:'Test mode only'},{status:400});
  try{
-  if(['checkout.session.completed','checkout.session.expired','checkout.session.async_payment_succeeded'].includes(event.type))await handleRetreatSession(event.data.object as Stripe.Checkout.Session);
+  if(['checkout.session.completed','checkout.session.expired','checkout.session.async_payment_succeeded','checkout.session.async_payment_failed'].includes(event.type))await handleRetreatSession(event.data.object as Stripe.Checkout.Session,event.type);
   else if(event.type==='invoice.deleted')await handleRetreatInvoiceDeleted(event.data.object as Stripe.Invoice);
   else if(event.type.startsWith('invoice.')){
    const invoice=event.data.object as Stripe.Invoice;
@@ -17,3 +17,4 @@ export async function POST(request:Request){
   return Response.json({received:true});
  }catch{return Response.json({error:'Retry required'},{status:500});}
 }
+

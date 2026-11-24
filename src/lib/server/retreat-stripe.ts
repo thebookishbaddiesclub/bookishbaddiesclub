@@ -1,6 +1,8 @@
 import Stripe from 'stripe';
 import {getStockDatabase,getSiteOrigin} from './clients';
-import {retreatInstallments,installmentConsent,RETREAT_CONSENT_VERSION,type Installment} from '../retreat-installments';
+import {retreatInstallments,type Installment} from '../retreat-installments';
+
+import {retreatCheckoutParams,retreatCheckoutConsent,RETREAT_CHECKOUT_VERSION,RETREAT_CHECKOUT_FLOW} from '../retreat-checkout';
 
 export function retreatStripeConfigured(){
  return /^sk_test_/.test(process.env.RETREAT_STRIPE_TEST_SECRET_KEY||'') && !!process.env.RETREAT_STRIPE_TEST_WEBHOOK_SECRET;
@@ -35,33 +37,28 @@ const amount=(cents:number)=>(cents/100).toFixed(2)+' €';
 const date=(at:string)=>new Date(at).toLocaleDateString('fr-FR',{timeZone:'Europe/Paris'});
 export async function createRetreatCheckout(body:{requestId:string;token?:string;seats:string[];seat:string;guest:Record<string,unknown>;cents:number;split:boolean;consentVersion:string;expectedSteps:Installment[]}){
  const stripe=getRetreatStripe(),db=getStockDatabase();
- const plan=retreatInstallments(body.cents,body.split);
- if(body.consentVersion!==RETREAT_CONSENT_VERSION||!Array.isArray(body.expectedSteps)||JSON.stringify(body.expectedSteps.map(s=>[s.cents,s.number,s.number===1?'now':s.dueAt]))!==JSON.stringify(plan.map(s=>[s.cents,s.number,s.number===1?'now':s.dueAt])))throw Error('PLAN_CHANGED');
- const {error}=await db.rpc('retreat_payment_prepare',{p_id:body.requestId,p_token:body.token||null,p_seats:body.seats,p_seat:body.seat,p_guest:body.guest,p_cents:body.cents,p_split:body.split,p_steps:plan,p_consent:installmentConsent(plan)});
+ if(body.split)throw Error('PLAN_CHANGED');
+ const plan=retreatInstallments(body.cents,false);
+ if(body.consentVersion!==RETREAT_CHECKOUT_VERSION||!Array.isArray(body.expectedSteps)||JSON.stringify(body.expectedSteps.map(s=>[s.cents,s.number,s.number===1?'now':s.dueAt]))!==JSON.stringify(plan.map(s=>[s.cents,s.number,s.number===1?'now':s.dueAt])))throw Error('PLAN_CHANGED');
+ const {error}=await db.rpc('retreat_payment_prepare',{p_id:body.requestId,p_token:body.token||null,p_seats:body.seats,p_seat:body.seat,p_guest:body.guest,p_cents:body.cents,p_split:body.split,p_steps:plan,p_consent:retreatCheckoutConsent(body.cents)});
  if(error)throw Error(error.message);
- let {order,steps}=await orderData(body.requestId);
+ let {order}=await orderData(body.requestId);
  if(order.state!=='pending')throw Error('ORDER_ALREADY_FINISHED');
+ if(order.split)throw Error('PLAN_CHANGED');
+ // Keep the existing database RPC compatible; persist the new consent version before contacting Stripe.
+ await saveOrder(order.id,{consent_version:RETREAT_CHECKOUT_VERSION});
  if(order.session_id){
   const session=await stripe.checkout.sessions.retrieve(order.session_id);
+  if(session.metadata?.retreat_flow!==RETREAT_CHECKOUT_FLOW)throw Error('PLAN_CHANGED');
   if(session.status!=='open'||!session.url)throw Error('ORDER_ALREADY_FINISHED');
   return {url:session.url};
  }
  if(Date.parse(order.expires_at)-Date.now()<30*60*1000)throw Error('CHECKOUT_RECONCILE');
  if(!order.customer_id){
-  const customer=await stripe.customers.create({email:String(body.guest.email),name:String(body.guest.first)+' '+String(body.guest.last),metadata:metadata(order.id)},{idempotencyKey:'retreat-customer-'+order.id});
+  const customer=await stripe.customers.create({email:String(body.guest.email),name:String(body.guest.first)+' '+String(body.guest.last),metadata:{retreat_flow:RETREAT_CHECKOUT_FLOW,retreat_order:order.id}},{idempotencyKey:'retreat-customer-'+order.id});
   await saveOrder(order.id,{customer_id:customer.id});order={...order,customer_id:customer.id};
  }
- const origin=getSiteOrigin();
- const session=await stripe.checkout.sessions.create({
-  mode:'payment',customer:order.customer_id!,payment_method_types:['card'],
-  expires_at:Math.floor(Date.parse(order.expires_at)/1000),
-  metadata:metadata(order.id),client_reference_id:order.id,
-  payment_intent_data:{metadata:metadata(order.id),...(order.split?{setup_future_usage:'off_session' as const}:{})},
-  line_items:[{quantity:1,price_data:{currency:'eur',unit_amount:steps[0].cents,product_data:{name:'Le Week-end des Baddies — Mountain Edition',description:order.split?'Premier paiement sur trois · total '+amount(order.cents):'Paiement du séjour'}}}],
-  custom_text:{submit:{message:installmentConsent(steps.map(s=>({number:s.number,cents:s.cents,dueAt:s.due_at}))).slice(0,1200)}},
-  success_url:origin+'/preview/retraite-lecture-2027/paiement?order='+order.id,
-  cancel_url:origin+'/preview/retraite-lecture-2027/paiement?order='+order.id+'&cancelled=1',
- },{idempotencyKey:'retreat-checkout-'+order.id});
+ const session=await stripe.checkout.sessions.create(retreatCheckoutParams(order,getSiteOrigin()),{idempotencyKey:'retreat-checkout-'+order.id});
  if(session.livemode)throw Error('LIVE_MODE_FORBIDDEN');
  await saveOrder(order.id,{session_id:session.id});
  if(!session.url)throw Error('CHECKOUT_URL_MISSING');
@@ -118,17 +115,19 @@ async function notify(id:string,subject:string,text:string,key:string){
  if(!response.ok)throw Error('EMAIL_FAILED');
  return true;
 }
-export async function handleRetreatSession(session:Stripe.Checkout.Session){
- if(session.metadata?.retreat_flow!=='automatic_v1')return;
+export async function handleRetreatSession(session:Stripe.Checkout.Session,eventType=''){
+ if(!['automatic_v1',RETREAT_CHECKOUT_FLOW].includes(session.metadata?.retreat_flow||''))return;
  if(session.livemode)throw Error('LIVE_MODE_FORBIDDEN');
- const id=session.metadata.retreat_order;
+ const id=session.metadata!.retreat_order;
  const stripe=getRetreatStripe();
+ if(eventType==='checkout.session.async_payment_failed')session=await stripe.checkout.sessions.retrieve(session.id);
  const {order}=await orderData(id);
+ if(session.metadata?.retreat_flow===RETREAT_CHECKOUT_FLOW&&(order.split||session.amount_total!==order.cents))throw Error('PAYMENT_MISMATCH');
  if(order.session_id!==session.id) {
   if(order.session_id||session.client_reference_id!==id||session.customer!==order.customer_id)throw Error('SESSION_MISMATCH');
   await saveOrder(id,{session_id:session.id});
  }
- if(session.status==='expired'&&session.payment_status!=='paid'){
+ if((session.status==='expired'||eventType==='checkout.session.async_payment_failed')&&session.payment_status!=='paid'){
   const {error}=await getStockDatabase().rpc('retreat_payment_finish',{p_id:id,p_session:session.id,p_paid:false,p_amount:0,p_currency:'eur',p_customer:null,p_method:null,p_paid_at:null});if(error)throw error;
   return;
  }
@@ -141,12 +140,12 @@ export async function handleRetreatSession(session:Stripe.Checkout.Session){
  const paidAt=typeof charge==='object'&&charge?new Date(charge.created*1000).toISOString():new Date().toISOString();
  const {error}=await getStockDatabase().rpc('retreat_payment_finish',{p_id:id,p_session:session.id,p_paid:true,p_amount:session.amount_total,p_currency:session.currency,p_customer:order.customer_id,p_method:method||null,p_paid_at:paidAt});if(error)throw error;
  const current=await orderData(id);
- await scheduleRetreatInvoices(stripe,current.order,current.steps);
+ if(session.metadata?.retreat_flow==='automatic_v1')await scheduleRetreatInvoices(stripe,current.order,current.steps);
  if(!current.order.email_sent){
   const refreshed=await orderData(id);
   const details=refreshed.steps.map(s=>`${date(s.due_at)} : ${amount(s.cents)}`).join('\n');
   const link=current.order.leader?getSiteOrigin()+'/preview/retraite-lecture-2027/groupe#'+current.order.group_token:'';
-  const sent=await notify(id,'Réservation confirmée',`Bonjour ${current.place.guest.first},\nTa réservation de test est confirmée.\n${details}\n${link?'Lien privé pour les copines (une heure après le premier paiement) : '+link:''}\nAucun débit réel. Consulte le suivi pour vérifier le statut de chaque échéance sur la carte de test.`,'retreat-confirm-'+id);
+  const sent=await notify(id,'Réservation confirmée',`Bonjour ${current.place.guest.first},\nTa réservation de test est confirmée.\n${details}\n${link?'Lien privé pour les copines (une heure après le premier paiement) : '+link:''}\nAucun débit réel. Consulte le suivi pour vérifier le paiement de test. Les éventuelles échéances Klarna sont gérées par Klarna.`,'retreat-confirm-'+id);
   if(sent)await saveOrder(id,{email_sent:true});
  }
 }
@@ -201,3 +200,4 @@ export async function handleRetreatInvoiceDeleted(invoice:Stripe.Invoice){
  if(!step||n<2||invoice.customer!==order.customer_id||(step.invoice_id&&step.invoice_id!==invoice.id))throw Error('INVOICE_MISMATCH');
  await saveStep(id,n,{invoice_id:invoice.id,status:'cancelled',error:'Facture supprimée dans Stripe. Aucun prélèvement programmé pour cette échéance.'});
 }
+

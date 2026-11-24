@@ -1,3 +1,35 @@
+# Current checkout: card or Klarna (private test only)
+
+New reservations use one payment for the full price: EUR 199, 215 or 315.
+Checkout explicitly allows `card` and `klarna`. There is no `setup_future_usage`,
+no site-created installment schedule, and no automatic invoices for new orders.
+Klarna controls eligibility, its available payment options and customer repayments.
+Existing `automatic_v1` test orders retain their agreed behavior and history.
+
+No new SQL script is needed after the two previous booking/payment migrations.
+The server persists `card-klarna-v2` consent before creating Checkout.
+Saved page copy mentioning the former three installments is normalized for the
+four payment-related fields; the admin editor can still change the resulting text.
+
+In the Stripe TEST environment, enable Klarna. Add
+`checkout.session.async_payment_failed` to the existing retreat webhook, in addition
+to `checkout.session.completed`, `checkout.session.expired` and
+`checkout.session.async_payment_succeeded`. Keep invoice events for legacy test orders.
+A signed successful payment confirms the place; a browser return never does.
+
+Start a NEW reservation after deployment; an existing Stripe session cannot gain
+Klarna. Test approved, denied, abandoned and duplicate-event flows. For France,
+Stripe documents `customer@email.fr` (approved) and `customer+denied@email.fr`
+(denied) in the Klarna sandbox. No real card or real payment is needed.
+https://docs.stripe.com/payments/klarna/accept-a-payment
+
+Live sales remain disabled. No customer test emails unless the explicit test
+recipient environment variable is configured. Legacy test invoices, if present,
+are not cancelled by this deployment; manage them in Stripe's test environment.
+
+---
+## Historical automatic-card integration (legacy orders only)
+
 # Automatic installments — private Stripe test integration
 
 ## Deployment and activation
@@ -65,3 +97,4 @@ References:
 - https://docs.stripe.com/invoicing/scheduled-finalization
 - https://docs.stripe.com/api/invoices/create
 - https://docs.stripe.com/payments/checkout/save-during-payment
+
