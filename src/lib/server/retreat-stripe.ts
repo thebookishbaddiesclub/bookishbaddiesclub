@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import {retreatConfirmationHtml,retreatConfirmationSubject} from '../retreat-confirmation';
 import {getStockDatabase,getSiteOrigin} from './clients';
 import {retreatInstallments,type Installment} from '../retreat-installments';
 
@@ -105,13 +106,13 @@ export async function scheduleRetreatInvoices(stripe:Stripe,order:Order,steps:St
   await persist(order.id,step.number,{status:'scheduled',error:null});
  }
 }
-async function notify(id:string,subject:string,text:string,key:string){
+async function notify(id:string,subject:string,text:string,key:string,html?:string){
  // Private Stripe testing cannot email participants. An optional explicit test mailbox
  // receives previews; no email service call is made otherwise.
  const recipient=process.env.RETREAT_TEST_EMAIL_RECIPIENT;
  if(!recipient)return false;
  if(!process.env.RESEND_API_KEY||!process.env.EMAIL_FROM)throw Error('EMAIL_NOT_CONFIGURED');
- const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+process.env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':key},body:JSON.stringify({from:process.env.EMAIL_FROM,to:[recipient],subject:'[TEST RETRAITE] '+subject,text:text+'\nRéférence : '+id})});
+ const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+process.env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':key},body:JSON.stringify({from:process.env.EMAIL_FROM,to:[recipient],subject:'[TEST RETRAITE] '+subject,text:text+'\nRéférence : '+id,...(html?{html}: {})})});
  if(!response.ok)throw Error('EMAIL_FAILED');
  return true;
 }
@@ -145,7 +146,8 @@ export async function handleRetreatSession(session:Stripe.Checkout.Session,event
   const refreshed=await orderData(id);
   const details=refreshed.steps.map(s=>`${date(s.due_at)} : ${amount(s.cents)}`).join('\n');
   const link=current.order.leader?getSiteOrigin()+'/preview/retraite-lecture-2027/groupe#'+current.order.group_token:'';
-  const sent=await notify(id,'Réservation confirmée',`Bonjour ${current.place.guest.first},\nTa réservation de test est confirmée.\n${details}\n${link?'Lien privé pour les copines (une heure après le premier paiement) : '+link:''}\nAucun débit réel. Consulte le suivi pour vérifier le paiement de test. Les éventuelles échéances Klarna sont gérées par Klarna.`,'retreat-confirm-'+id);
+  const confirmationDetails=`Bonjour ${current.place.guest.first},\nTa réservation de test est confirmée.\n${details}\n${link?'Lien privé pour les copines (une heure après le premier paiement) : '+link:''}\nAucun débit réel. Consulte le suivi pour vérifier le paiement de test. Les éventuelles échéances Klarna sont gérées par Klarna.`;
+  const sent=await notify(id,retreatConfirmationSubject,confirmationDetails,'retreat-confirm-'+id,retreatConfirmationHtml(confirmationDetails));
   if(sent)await saveOrder(id,{email_sent:true});
  }
 }
