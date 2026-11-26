@@ -14,3 +14,9 @@ test('booking details remain visible and cannot inject HTML into confirmation',(
  assert(!html.includes('<img src=x'));
  assert(html.includes('Ta place pour le Week-end des Baddies est confirmée'));
 });
+
+test('reservation summary precedes the design and Instagram comes last',()=>{
+ const html=retreatConfirmationHtml();
+ assert(html.indexOf('EXEMPLE DE CONFIRMATION')<html.indexOf('Pack your books, Baddies !'));
+ assert(html.indexOf('See you in the mountains')<html.indexOf('https://ig.me/'));
+});

@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import {demoSeats} from '@/app/preview/retraite-lecture-2027/reservation/demo-rooms';
 import {retreatConfirmationHtml,retreatConfirmationSubject} from '../retreat-confirmation';
 import {getStockDatabase,getSiteOrigin} from './clients';
 import {retreatInstallments,type Installment} from '../retreat-installments';
@@ -146,7 +147,8 @@ export async function handleRetreatSession(session:Stripe.Checkout.Session,event
   const refreshed=await orderData(id);
   const details=refreshed.steps.map(s=>`${date(s.due_at)} : ${amount(s.cents)}`).join('\n');
   const link=current.order.leader?getSiteOrigin()+'/preview/retraite-lecture-2027/groupe#'+current.order.group_token:'';
-  const confirmationDetails=`Bonjour ${current.place.guest.first},\nTa réservation de test est confirmée.\n${details}\n${link?'Lien privé pour les copines (une heure après le premier paiement) : '+link:''}\nAucun débit réel. Consulte le suivi pour vérifier le paiement de test. Les éventuelles échéances Klarna sont gérées par Klarna.`;
+  const seat=demoSeats.find(s=>s.id===current.place.seat);
+  const confirmationDetails=`Bonjour ${current.place.guest.first},\nTa réservation de test est confirmée.\nSéjour : du 12 au 14 mars 2027 à Bolquère.\nChambre et couchage : ${seat?seat.room+' · '+seat.label:'voir ton récapitulatif'}.\nRépartition provisoire, susceptible d’être ajustée.\nPaiement de test reçu : ${amount(session.amount_total||0)}. Aucun débit réel.\nTotal du séjour : ${amount(current.order.cents)}.\nRéférence : ${id}.\n${current.order.split?'Échéancier de cet ancien essai :\n'+details:''}\n${link?'Lien privé pour les copines (une heure après le premier paiement) : '+link:''}\nAucun débit réel. Consulte le suivi pour vérifier le paiement de test. Les éventuelles échéances Klarna sont gérées par Klarna.`;
   const sent=await notify(id,retreatConfirmationSubject,confirmationDetails,'retreat-confirm-'+id,retreatConfirmationHtml(confirmationDetails));
   if(sent)await saveOrder(id,{email_sent:true});
  }
